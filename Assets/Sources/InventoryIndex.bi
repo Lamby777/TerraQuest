@@ -1,5 +1,23 @@
 Dim Shared ItemIndex(1000, InvParameters)
 Dim Shared ItemName(1000, 2) As String
+Dim ItemID As Single
+
+'template
+ItemID = 0
+ItemName(ItemID, 0) = ""
+ItemName(ItemID, 1) = "PlaceHolder"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 0 'item texture x cord
+ItemIndex(ItemID, 2) = 0 'item texture y cord
+ItemIndex(ItemID, 3) = 0 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 0 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
 
 ItemName(0, 0) = "Creative Shovel"
 ItemName(0, 1) = "Allows you to break ground tiles"
@@ -481,7 +499,7 @@ ItemIndex(37, 9) = 37 'Item ID
 
 '38-45 ores
 
-ItemName(38, 0) = "Tin Ore 
+ItemName(38, 0) = "Tin Ore"
 ItemName(38, 1) = "Crafting Material"
 ItemIndex(38, 0) = 3 'item type (1 means tool)
 ItemIndex(38, 1) = 112 'item texture x cord
@@ -494,7 +512,7 @@ ItemIndex(38, 7) = 1 'current stack
 ItemIndex(38, 8) = 100 'max stack
 ItemIndex(38, 9) = 38 'Item ID
 
-ItemName(39, 0) = "Copper Ore 
+ItemName(39, 0) = "Copper Ore"
 ItemName(39, 1) = "Crafting Material"
 ItemIndex(39, 0) = 3 'item type (1 means tool)
 ItemIndex(39, 1) = 128 'item texture x cord
@@ -507,12 +525,12 @@ ItemIndex(39, 7) = 1 'current stack
 ItemIndex(39, 8) = 100 'max stack
 ItemIndex(39, 9) = 39 'Item ID
 
-ItemName(40, 0) = "Iron Ore 
+ItemName(40, 0) = "Iron Ore"
 ItemName(40, 1) = "Crafting Material"
 ItemIndex(40, 0) = 3 'item type (1 means tool)
 ItemIndex(40, 1) = 144 'item texture x cord
 ItemIndex(40, 2) = 32 'item texture y cord
-ItemIndex(40, 3) = 0 ' 
+ItemIndex(40, 3) = 0 '
 ItemIndex(40, 4) = 0 '
 ItemIndex(40, 5) = 0 '
 ItemIndex(40, 6) = 0 '
@@ -520,12 +538,12 @@ ItemIndex(40, 7) = 1 'current stack
 ItemIndex(40, 8) = 100 'max stack
 ItemIndex(40, 9) = 40 'Item ID
 
-ItemName(41, 0) = "Platinum Ore 
+ItemName(41, 0) = "Platinum Ore"
 ItemName(41, 1) = "Crafting Material"
 ItemIndex(41, 0) = 3 'item type (1 means tool)
 ItemIndex(41, 1) = 160 'item texture x cord
 ItemIndex(41, 2) = 32 'item texture y cord
-ItemIndex(41, 3) = 0 ' 
+ItemIndex(41, 3) = 0 '
 ItemIndex(41, 4) = 0 '
 ItemIndex(41, 5) = 0 '
 ItemIndex(41, 6) = 0 '
@@ -533,12 +551,12 @@ ItemIndex(41, 7) = 1 'current stack
 ItemIndex(41, 8) = 100 'max stack
 ItemIndex(41, 9) = 41 'Item ID
 
-ItemName(42, 0) = "Titanium Ore 
+ItemName(42, 0) = "Titanium Ore"
 ItemName(42, 1) = "Crafting Material"
 ItemIndex(42, 0) = 3 'item type (1 means tool)
 ItemIndex(42, 1) = 176 'item texture x cord
 ItemIndex(42, 2) = 32 'item texture y cord
-ItemIndex(42, 3) = 0 ' 
+ItemIndex(42, 3) = 0 '
 ItemIndex(42, 4) = 0 '
 ItemIndex(42, 5) = 0 '
 ItemIndex(42, 6) = 0 '
@@ -546,12 +564,12 @@ ItemIndex(42, 7) = 1 'current stack
 ItemIndex(42, 8) = 100 'max stack
 ItemIndex(42, 9) = 42 'Item ID
 
-ItemName(43, 0) = "Cobalt Ore 
+ItemName(43, 0) = "Cobalt Ore"
 ItemName(43, 1) = "Crafting Material"
 ItemIndex(43, 0) = 3 'item type (1 means tool)
 ItemIndex(43, 1) = 192 'item texture x cord
 ItemIndex(43, 2) = 32 'item texture y cord
-ItemIndex(43, 3) = 0 ' 
+ItemIndex(43, 3) = 0 '
 ItemIndex(43, 4) = 0 '
 ItemIndex(43, 5) = 0 '
 ItemIndex(43, 6) = 0 '
@@ -559,12 +577,12 @@ ItemIndex(43, 7) = 1 'current stack
 ItemIndex(43, 8) = 100 'max stack
 ItemIndex(43, 9) = 43 'Item ID
 
-ItemName(44, 0) = "Chromium Ore 
+ItemName(44, 0) = "Chromium Ore"
 ItemName(44, 1) = "Crafting Material"
 ItemIndex(44, 0) = 3 'item type (1 means tool)
 ItemIndex(44, 1) = 208 'item texture x cord
 ItemIndex(44, 2) = 32 'item texture y cord
-ItemIndex(44, 3) = 0 ' 
+ItemIndex(44, 3) = 0 '
 ItemIndex(44, 4) = 0 '
 ItemIndex(44, 5) = 0 '
 ItemIndex(44, 6) = 0 '
@@ -572,12 +590,12 @@ ItemIndex(44, 7) = 1 'current stack
 ItemIndex(44, 8) = 100 'max stack
 ItemIndex(44, 9) = 44 'Item ID
 
-ItemName(45, 0) = "Tungsten Ore 
+ItemName(45, 0) = "Tungsten Ore"
 ItemName(45, 1) = "Crafting Material"
 ItemIndex(45, 0) = 3 'item type (1 means tool)
 ItemIndex(45, 1) = 224 'item texture x cord
 ItemIndex(45, 2) = 32 'item texture y cord
-ItemIndex(45, 3) = 0 ' 
+ItemIndex(45, 3) = 0 '
 ItemIndex(45, 4) = 0 '
 ItemIndex(45, 5) = 0 '
 ItemIndex(45, 6) = 0 '
@@ -587,7 +605,7 @@ ItemIndex(45, 9) = 45 'Item ID
 '46-53 bars
 
 
-ItemName(46, 0) = "Refined Tin
+ItemName(46, 0) = "Refined Tin"
 ItemName(46, 1) = "Crafting Material"
 ItemIndex(46, 0) = 3 'item type (1 means tool)
 ItemIndex(46, 1) = 112 'item texture x cord
@@ -600,7 +618,7 @@ ItemIndex(46, 7) = 1 'current stack
 ItemIndex(46, 8) = 100 'max stack
 ItemIndex(46, 9) = 46 'Item ID
 
-ItemName(47, 0) = "Refined Copper 
+ItemName(47, 0) = "Refined Copper"
 ItemName(47, 1) = "Crafting Material"
 ItemIndex(47, 0) = 3 'item type (1 means tool)
 ItemIndex(47, 1) = 128 'item texture x cord
@@ -613,12 +631,12 @@ ItemIndex(47, 7) = 1 'current stack
 ItemIndex(47, 8) = 100 'max stack
 ItemIndex(47, 9) = 47 'Item ID
 
-ItemName(48, 0) = "Refind Iron 
+ItemName(48, 0) = "Refind Iron"
 ItemName(48, 1) = "Crafting Material"
 ItemIndex(48, 0) = 3 'item type (1 means tool)
 ItemIndex(48, 1) = 144 'item texture x cord
 ItemIndex(48, 2) = 48 'item texture y cord
-ItemIndex(48, 3) = 0 ' 
+ItemIndex(48, 3) = 0 '
 ItemIndex(48, 4) = 0 '
 ItemIndex(48, 5) = 0 '
 ItemIndex(48, 6) = 0 '
@@ -626,12 +644,12 @@ ItemIndex(48, 7) = 1 'current stack
 ItemIndex(48, 8) = 100 'max stack
 ItemIndex(48, 9) = 48 'Item ID
 
-ItemName(49, 0) = "Refind Platinum
+ItemName(49, 0) = "Refind Platinum"
 ItemName(49, 1) = "Crafting Material"
 ItemIndex(49, 0) = 3 'item type (1 means tool)
 ItemIndex(49, 1) = 160 'item texture x cord
 ItemIndex(49, 2) = 48 'item texture y cord
-ItemIndex(49, 3) = 0 ' 
+ItemIndex(49, 3) = 0 '
 ItemIndex(49, 4) = 0 '
 ItemIndex(49, 5) = 0 '
 ItemIndex(49, 6) = 0 '
@@ -639,12 +657,12 @@ ItemIndex(49, 7) = 1 'current stack
 ItemIndex(49, 8) = 100 'max stack
 ItemIndex(49, 9) = 49 'Item ID
 
-ItemName(50, 0) = "Refind Titanium
+ItemName(50, 0) = "Refind Titanium"
 ItemName(50, 1) = "Crafting Material"
 ItemIndex(50, 0) = 3 'item type (1 means tool)
 ItemIndex(50, 1) = 176 'item texture x cord
 ItemIndex(50, 2) = 48 'item texture y cord
-ItemIndex(50, 3) = 0 ' 
+ItemIndex(50, 3) = 0 '
 ItemIndex(50, 4) = 0 '
 ItemIndex(50, 5) = 0 '
 ItemIndex(50, 6) = 0 '
@@ -652,12 +670,12 @@ ItemIndex(50, 7) = 1 'current stack
 ItemIndex(50, 8) = 100 'max stack
 ItemIndex(50, 9) = 50 'Item ID
 
-ItemName(51, 0) = "Refind Cobalt
+ItemName(51, 0) = "Refind Cobalt"
 ItemName(51, 1) = "Crafting Material"
 ItemIndex(51, 0) = 3 'item type (1 means tool)
 ItemIndex(51, 1) = 192 'item texture x cord
 ItemIndex(51, 2) = 48 'item texture y cord
-ItemIndex(51, 3) = 0 ' 
+ItemIndex(51, 3) = 0 '
 ItemIndex(51, 4) = 0 '
 ItemIndex(51, 5) = 0 '
 ItemIndex(51, 6) = 0 '
@@ -665,12 +683,12 @@ ItemIndex(51, 7) = 1 'current stack
 ItemIndex(51, 8) = 100 'max stack
 ItemIndex(51, 9) = 51 'Item ID
 
-ItemName(52, 0) = "Refind Chromium
+ItemName(52, 0) = "Refind Chromium"
 ItemName(52, 1) = "Crafting Material"
 ItemIndex(52, 0) = 3 'item type (1 means tool)
 ItemIndex(52, 1) = 208 'item texture x cord
 ItemIndex(52, 2) = 48 'item texture y cord
-ItemIndex(52, 3) = 0 ' 
+ItemIndex(52, 3) = 0 '
 ItemIndex(52, 4) = 0 '
 ItemIndex(52, 5) = 0 '
 ItemIndex(52, 6) = 0 '
@@ -678,12 +696,12 @@ ItemIndex(52, 7) = 1 'current stack
 ItemIndex(52, 8) = 100 'max stack
 ItemIndex(52, 9) = 52 'Item ID
 
-ItemName(53, 0) = "Refind Tungsten
+ItemName(53, 0) = "Refind Tungsten"
 ItemName(53, 1) = "Crafting Material"
 ItemIndex(53, 0) = 3 'item type (1 means tool)
 ItemIndex(53, 1) = 224 'item texture x cord
 ItemIndex(53, 2) = 48 'item texture y cord
-ItemIndex(53, 3) = 0 ' 
+ItemIndex(53, 3) = 0 '
 ItemIndex(53, 4) = 0 '
 ItemIndex(53, 5) = 0 '
 ItemIndex(53, 6) = 0 '
@@ -693,12 +711,12 @@ ItemIndex(53, 9) = 53 'Item ID
 
 '54-58 tool handles
 
-ItemName(54, 0) = "Iron Tool Handle 
+ItemName(54, 0) = "Iron Tool Handle"
 ItemName(54, 1) = "Crafting Material"
 ItemIndex(54, 0) = 3 'item type (1 means tool)
 ItemIndex(54, 1) = 240 'item texture x cord
 ItemIndex(54, 2) = 32 'item texture y cord
-ItemIndex(54, 3) = 0 ' 
+ItemIndex(54, 3) = 0 '
 ItemIndex(54, 4) = 0 '
 ItemIndex(54, 5) = 0 '
 ItemIndex(54, 6) = 0 '
@@ -706,12 +724,12 @@ ItemIndex(54, 7) = 1 'current stack
 ItemIndex(54, 8) = 100 'max stack
 ItemIndex(54, 9) = 54 'Item ID
 
-ItemName(55, 0) = "Platinum Tool Handle 
+ItemName(55, 0) = "Platinum Tool Handle"
 ItemName(55, 1) = "Crafting Material"
 ItemIndex(55, 0) = 3 'item type (1 means tool)
 ItemIndex(55, 1) = 80 'item texture x cord
 ItemIndex(55, 2) = 48 'item texture y cord
-ItemIndex(55, 3) = 0 ' 
+ItemIndex(55, 3) = 0 '
 ItemIndex(55, 4) = 0 '
 ItemIndex(55, 5) = 0 '
 ItemIndex(55, 6) = 0 '
@@ -719,12 +737,12 @@ ItemIndex(55, 7) = 1 'current stack
 ItemIndex(55, 8) = 100 'max stack
 ItemIndex(55, 9) = 55 'Item ID
 
-ItemName(56, 0) = "Titanium Tool Handle 
+ItemName(56, 0) = "Titanium Tool Handle"
 ItemName(56, 1) = "Crafting Material"
 ItemIndex(56, 0) = 3 'item type (1 means tool)
 ItemIndex(56, 1) = 96 'item texture x cord
 ItemIndex(56, 2) = 48 'item texture y cord
-ItemIndex(56, 3) = 0 ' 
+ItemIndex(56, 3) = 0 '
 ItemIndex(56, 4) = 0 '
 ItemIndex(56, 5) = 0 '
 ItemIndex(56, 6) = 0 '
@@ -732,12 +750,12 @@ ItemIndex(56, 7) = 1 'current stack
 ItemIndex(56, 8) = 100 'max stack
 ItemIndex(56, 9) = 56 'Item ID
 
-ItemName(57, 0) = "Cobalt Tool Handle 
+ItemName(57, 0) = "Cobalt Tool Handle"
 ItemName(57, 1) = "Crafting Material"
 ItemIndex(57, 0) = 3 'item type (1 means tool)
 ItemIndex(57, 1) = 240 'item texture x cord
 ItemIndex(57, 2) = 48 'item texture y cord
-ItemIndex(57, 3) = 0 ' 
+ItemIndex(57, 3) = 0 '
 ItemIndex(57, 4) = 0 '
 ItemIndex(57, 5) = 0 '
 ItemIndex(57, 6) = 0 '
@@ -745,12 +763,12 @@ ItemIndex(57, 7) = 1 'current stack
 ItemIndex(57, 8) = 100 'max stack
 ItemIndex(57, 9) = 57 'Item ID
 
-ItemName(58, 0) = "Chromium Tool Handle 
+ItemName(58, 0) = "Chromium Tool Handle"
 ItemName(58, 1) = "Crafting Material"
 ItemIndex(58, 0) = 3 'item type (1 means tool)
 ItemIndex(58, 1) = 80 'item texture x cord
 ItemIndex(58, 2) = 64 'item texture y cord
-ItemIndex(58, 3) = 0 ' 
+ItemIndex(58, 3) = 0 '
 ItemIndex(58, 4) = 0 '
 ItemIndex(58, 5) = 0 '
 ItemIndex(58, 6) = 0 '
@@ -889,7 +907,7 @@ ItemIndex(68, 5) = 3 '
 ItemIndex(68, 6) = 40 'attack strength
 ItemIndex(68, 7) = 1 'current stack
 ItemIndex(68, 8) = 1 'max stack
-ItemIndex(68, 9) = 68'Item ID
+ItemIndex(68, 9) = 68 'Item ID
 
 
 'Iron Toolset (69-73)
@@ -972,7 +990,7 @@ ItemIndex(74, 6) = 50 'tool strength
 ItemIndex(74, 7) = 1 'current stack
 ItemIndex(74, 8) = 1 'max stack
 ItemIndex(74, 9) = 74 'Item ID
-itemindex(74,10) = 1 'imbuable
+ItemIndex(74, 10) = 1 'imbuable
 
 ItemName(75, 0) = "Platinum Axe"
 ItemName(75, 1) = "Allows you to break wall tiles"
@@ -986,7 +1004,7 @@ ItemIndex(75, 6) = 55 'tool strength
 ItemIndex(75, 7) = 1 'current stack
 ItemIndex(75, 8) = 1 'max stack
 ItemIndex(75, 9) = 75 'Item ID
-itemindex(75,10) = 1 'imbuable
+ItemIndex(75, 10) = 1 'imbuable
 
 ItemName(76, 0) = "Platinum Pickaxe"
 ItemName(76, 1) = "Allows you to mine"
@@ -1000,7 +1018,7 @@ ItemIndex(76, 6) = 55 'tool strength
 ItemIndex(76, 7) = 1 'current stack
 ItemIndex(76, 8) = 1 'max stack
 ItemIndex(76, 9) = 76 'Item ID
-itemindex(76,10) = 1 'imbuable
+ItemIndex(76, 10) = 1 'imbuable
 
 ItemName(77, 0) = "Platium Sword"
 ItemName(77, 1) = "Allows you to fight"
@@ -1014,7 +1032,7 @@ ItemIndex(77, 6) = 4 'attack strength
 ItemIndex(77, 7) = 1 'current stack
 ItemIndex(77, 8) = 1 'max stack
 ItemIndex(77, 9) = 77 'item id
-itemindex(77,10) = 1 'imbuable
+ItemIndex(77, 10) = 1 'imbuable
 
 ItemName(78, 0) = "Platinum Hoe"
 ItemName(78, 1) = "hoe"
@@ -1027,8 +1045,8 @@ ItemIndex(78, 5) = 3 '
 ItemIndex(78, 6) = 45 'attack strength
 ItemIndex(78, 7) = 1 'current stack
 ItemIndex(78, 8) = 1 'max stack
-ItemIndex(78, 9) = 78'Item ID
-itemindex(78,10) = 1 'imbuable
+ItemIndex(78, 9) = 78 'Item ID
+ItemIndex(78, 10) = 1 'imbuable
 
 '79-83 titanium toolset
 
@@ -1044,7 +1062,7 @@ ItemIndex(79, 6) = 70 'tool strength
 ItemIndex(79, 7) = 1 'current stack
 ItemIndex(79, 8) = 1 'max stack
 ItemIndex(79, 9) = 79 'Item ID
-itemindex(79,10) = 1 'imbuable
+ItemIndex(79, 10) = 1 'imbuable
 
 ItemName(80, 0) = "Titanium Axe"
 ItemName(80, 1) = "Allows you to break wall tiles"
@@ -1058,13 +1076,13 @@ ItemIndex(80, 6) = 70 'tool strength
 ItemIndex(80, 7) = 1 'current stack
 ItemIndex(80, 8) = 1 'max stack
 ItemIndex(80, 9) = 80 'Item ID
-itemindex(80,10) = 1 'imbuable
+ItemIndex(80, 10) = 1 'imbuable
 
 ItemName(81, 0) = "Titanium Pickaxe"
 ItemName(81, 1) = "Allows you to mine"
 ItemIndex(81, 0) = 1 'item type (1 means tool)
 ItemIndex(81, 1) = 32 'item texture x cord
-ItemIndex(81, 2) = 112'item texture y cord
+ItemIndex(81, 2) = 112 'item texture y cord
 ItemIndex(81, 3) = 100 'tool max durabillity
 ItemIndex(81, 4) = 100 'tool current durrabillity
 ItemIndex(81, 5) = 2 'tool type
@@ -1072,7 +1090,7 @@ ItemIndex(81, 6) = 70 'tool strength
 ItemIndex(81, 7) = 1 'current stack
 ItemIndex(81, 8) = 1 'max stack
 ItemIndex(81, 9) = 81 'Item ID
-itemindex(81,10) = 1 'imbuable
+ItemIndex(81, 10) = 1 'imbuable
 
 ItemName(82, 0) = "Titanium Sword"
 ItemName(82, 1) = "Allows you to fight"
@@ -1086,7 +1104,7 @@ ItemIndex(82, 6) = 8 'attack strength
 ItemIndex(82, 7) = 1 'current stack
 ItemIndex(82, 8) = 1 'max stack
 ItemIndex(82, 9) = 82 'item id
-itemindex(82,10) = 1 'imbuable
+ItemIndex(82, 10) = 1 'imbuable
 
 ItemName(83, 0) = "Titanium Hoe"
 ItemName(83, 1) = "hoe"
@@ -1099,8 +1117,8 @@ ItemIndex(83, 5) = 3 '
 ItemIndex(83, 6) = 60 'attack strength
 ItemIndex(83, 7) = 1 'current stack
 ItemIndex(83, 8) = 1 'max stack
-ItemIndex(83, 9) = 83'Item ID
-itemindex(83,10) = 1 'imbuable
+ItemIndex(83, 9) = 83 'Item ID
+ItemIndex(83, 10) = 1 'imbuable
 
 '84-88 cobalt toolset
 
@@ -1116,7 +1134,7 @@ ItemIndex(84, 6) = 80 'tool strength
 ItemIndex(84, 7) = 1 'current stack
 ItemIndex(84, 8) = 1 'max stack
 ItemIndex(84, 9) = 84 'Item ID
-itemindex(84,10) = 1 'imbuable
+ItemIndex(84, 10) = 1 'imbuable
 
 ItemName(85, 0) = "Cobalt Axe"
 ItemName(85, 1) = "Allows you to break wall tiles"
@@ -1130,13 +1148,13 @@ ItemIndex(85, 6) = 80 'tool strength
 ItemIndex(85, 7) = 1 'current stack
 ItemIndex(85, 8) = 1 'max stack
 ItemIndex(85, 9) = 85 'Item ID
-itemindex(85,10) = 1 'imbuable
+ItemIndex(85, 10) = 1 'imbuable
 
 ItemName(86, 0) = "Cobalt Pickaxe"
 ItemName(86, 1) = "Allows you to mine"
 ItemIndex(86, 0) = 1 'item type (1 means tool)
 ItemIndex(86, 1) = 32 'item texture x cord
-ItemIndex(86, 2) = 128'item texture y cord
+ItemIndex(86, 2) = 128 'item texture y cord
 ItemIndex(86, 3) = 100 'tool max durabillity
 ItemIndex(86, 4) = 100 'tool current durrabillity
 ItemIndex(86, 5) = 2 'tool type
@@ -1144,7 +1162,7 @@ ItemIndex(86, 6) = 80 'tool strength
 ItemIndex(86, 7) = 1 'current stack
 ItemIndex(86, 8) = 1 'max stack
 ItemIndex(86, 9) = 86 'Item ID
-itemindex(86,10) = 1 'imbuable
+ItemIndex(86, 10) = 1 'imbuable
 
 ItemName(87, 0) = "Cobalt Sword"
 ItemName(87, 1) = "Allows you to fight"
@@ -1158,7 +1176,7 @@ ItemIndex(87, 6) = 16 'attack strength
 ItemIndex(87, 7) = 1 'current stack
 ItemIndex(87, 8) = 1 'max stack
 ItemIndex(87, 9) = 87 'item id
-itemindex(87,10) = 1 'imbuable
+ItemIndex(87, 10) = 1 'imbuable
 
 ItemName(88, 0) = "Cobalt Hoe"
 ItemName(88, 1) = "hoe"
@@ -1171,8 +1189,8 @@ ItemIndex(88, 5) = 3 '
 ItemIndex(88, 6) = 70 'attack strength
 ItemIndex(88, 7) = 1 'current stack
 ItemIndex(88, 8) = 1 'max stack
-ItemIndex(88, 9) = 88'Item ID
-itemindex(88,10) = 1 'imbuable
+ItemIndex(88, 9) = 88 'Item ID
+ItemIndex(88, 10) = 1 'imbuable
 
 
 '89-93 chromium toolset
@@ -1189,7 +1207,7 @@ ItemIndex(89, 6) = 90 'tool strength
 ItemIndex(89, 7) = 1 'current stack
 ItemIndex(89, 8) = 1 'max stack
 ItemIndex(89, 9) = 84 'Item ID
-itemindex(89,10) = 1 'imbuable
+ItemIndex(89, 10) = 1 'imbuable
 
 ItemName(90, 0) = "Chromium Axe"
 ItemName(90, 1) = "Allows you to break wall tiles"
@@ -1203,13 +1221,13 @@ ItemIndex(90, 6) = 90 'tool strength
 ItemIndex(90, 7) = 1 'current stack
 ItemIndex(90, 8) = 1 'max stack
 ItemIndex(90, 9) = 85 'Item ID
-itemindex(90,10) = 1 'imbuable
+ItemIndex(90, 10) = 1 'imbuable
 
 ItemName(91, 0) = "Chromium Pickaxe"
 ItemName(91, 1) = "Allows you to mine"
 ItemIndex(91, 0) = 1 'item type (1 means tool)
 ItemIndex(91, 1) = 32 'item texture x cord
-ItemIndex(91, 2) = 144'item texture y cord
+ItemIndex(91, 2) = 144 'item texture y cord
 ItemIndex(91, 3) = 100 'tool max durabillity
 ItemIndex(91, 4) = 100 'tool current durrabillity
 ItemIndex(91, 5) = 2 'tool type
@@ -1217,7 +1235,7 @@ ItemIndex(91, 6) = 90 'tool strength
 ItemIndex(91, 7) = 1 'current stack
 ItemIndex(91, 8) = 1 'max stack
 ItemIndex(91, 9) = 86 'Item ID
-itemindex(91,10) = 1 'imbuable
+ItemIndex(91, 10) = 1 'imbuable
 
 ItemName(92, 0) = "Chromium Sword"
 ItemName(92, 1) = "Allows you to fight"
@@ -1231,7 +1249,7 @@ ItemIndex(92, 6) = 24 'attack strength
 ItemIndex(92, 7) = 1 'current stack
 ItemIndex(92, 8) = 1 'max stack
 ItemIndex(92, 9) = 87 'item id
-itemindex(92,10) = 1 'imbuable
+ItemIndex(92, 10) = 1 'imbuable
 
 ItemName(93, 0) = "Chromium Hoe"
 ItemName(93, 1) = "hoe"
@@ -1244,8 +1262,8 @@ ItemIndex(93, 5) = 3 '
 ItemIndex(93, 6) = 80 'attack strength
 ItemIndex(93, 7) = 1 'current stack
 ItemIndex(93, 8) = 1 'max stack
-ItemIndex(93, 9) = 88'Item ID
-itemindex(93,10) = 1 'imbuable
+ItemIndex(93, 9) = 88 'Item ID
+ItemIndex(93, 10) = 1 'imbuable
 
 
 '94-98 tungsten toolset
@@ -1261,7 +1279,7 @@ ItemIndex(94, 6) = 100 'tool strength
 ItemIndex(94, 7) = 1 'current stack
 ItemIndex(94, 8) = 1 'max stack
 ItemIndex(94, 9) = 84 'Item ID
-itemindex(94,10) = 1 'imbuable
+ItemIndex(94, 10) = 1 'imbuable
 
 ItemName(95, 0) = "Tungsten Axe"
 ItemName(95, 1) = "Allows you to break wall tiles"
@@ -1275,13 +1293,13 @@ ItemIndex(95, 6) = 100 'tool strength
 ItemIndex(95, 7) = 1 'current stack
 ItemIndex(95, 8) = 1 'max stack
 ItemIndex(95, 9) = 85 'Item ID
-itemindex(95,10) = 1 'imbuable
+ItemIndex(95, 10) = 1 'imbuable
 
 ItemName(96, 0) = "Tungsten Pickaxe"
 ItemName(96, 1) = "Allows you to mine"
 ItemIndex(96, 0) = 1 'item type (1 means tool)
 ItemIndex(96, 1) = 32 'item texture x cord
-ItemIndex(96, 2) = 160'item texture y cord
+ItemIndex(96, 2) = 160 'item texture y cord
 ItemIndex(96, 3) = 100 'tool max durabillity
 ItemIndex(96, 4) = 100 'tool current durrabillity
 ItemIndex(96, 5) = 2 'tool type
@@ -1289,7 +1307,7 @@ ItemIndex(96, 6) = 100 'tool strength
 ItemIndex(96, 7) = 1 'current stack
 ItemIndex(96, 8) = 1 'max stack
 ItemIndex(96, 9) = 86 'Item ID
-itemindex(96,10) = 1 'imbuable
+ItemIndex(96, 10) = 1 'imbuable
 
 ItemName(97, 0) = "Tungsten Sword"
 ItemName(97, 1) = "Allows you to fight"
@@ -1303,7 +1321,7 @@ ItemIndex(97, 6) = 40 'attack strength
 ItemIndex(97, 7) = 1 'current stack
 ItemIndex(97, 8) = 1 'max stack
 ItemIndex(97, 9) = 87 'item id
-itemindex(97,10) = 1 'imbuable
+ItemIndex(97, 10) = 1 'imbuable
 
 ItemName(98, 0) = "Tungsten Hoe"
 ItemName(98, 1) = "hoe"
@@ -1316,8 +1334,8 @@ ItemIndex(98, 5) = 3 '
 ItemIndex(98, 6) = 90 'attack strength
 ItemIndex(98, 7) = 1 'current stack
 ItemIndex(98, 8) = 1 'max stack
-ItemIndex(98, 9) = 88'Item ID
-itemindex(98,10) = 1 'imbuable
+ItemIndex(98, 9) = 88 'Item ID
+ItemIndex(98, 10) = 1 'imbuable
  
 ItemName(99, 0) = "Advanced Crafting Station"
 ItemName(99, 1) = "Placeholder"
@@ -1371,12 +1389,12 @@ ItemIndex(102, 8) = 100 'max stack
 ItemIndex(102, 9) = 102 'Item ID
 
 'Stone of Refraction (imbuement stone) 103
-ItemName(103, 0) = "Imbuement Refraction Core
+ItemName(103, 0) = "Imbuement Refraction Core"
 ItemName(103, 1) = "Crafting Material"
 ItemIndex(103, 0) = 3 'item type (1 means tool)
-ItemIndex(103, 1) = 96   'item texture x cord
+ItemIndex(103, 1) = 96 'item texture x cord
 ItemIndex(103, 2) = 80 'item texture y cord
-ItemIndex(103, 3) = 0 ' 
+ItemIndex(103, 3) = 0 '
 ItemIndex(103, 4) = 0 '
 ItemIndex(103, 5) = 0 '
 ItemIndex(103, 6) = 0 '
@@ -1385,12 +1403,12 @@ ItemIndex(103, 8) = 100 'max stack
 ItemIndex(103, 9) = 103 'Item ID
 
 'Aetherian Energy Sphere 103
-ItemName(104, 0) = "Aetherian Energy Sphere 
+ItemName(104, 0) = "Aetherian Energy Sphere"
 ItemName(104, 1) = "Crafting Material"
 ItemIndex(104, 0) = 3 'item type (1 means tool)
-ItemIndex(104, 1) = 112   'item texture x cord
+ItemIndex(104, 1) = 112 'item texture x cord
 ItemIndex(104, 2) = 80 'item texture y cord
-ItemIndex(104, 3) = 0 ' 
+ItemIndex(104, 3) = 0 '
 ItemIndex(104, 4) = 0 '
 ItemIndex(104, 5) = 0 '
 ItemIndex(104, 6) = 0 '
@@ -1400,12 +1418,12 @@ ItemIndex(104, 9) = 104 'Item ID
 
 
 '105-112 gemstones
-ItemName(105, 0) = "Sapphire
+ItemName(105, 0) = "Sapphire"
 ItemName(105, 1) = "Crafting Material"
 ItemIndex(105, 0) = 3 'item type (1 means tool)
-ItemIndex(105, 1) = 144   'item texture x cord
+ItemIndex(105, 1) = 144 'item texture x cord
 ItemIndex(105, 2) = 64 'item texture y cord
-ItemIndex(105, 3) = 0 ' 
+ItemIndex(105, 3) = 0 '
 ItemIndex(105, 4) = 0 '
 ItemIndex(105, 5) = 0 '
 ItemIndex(105, 6) = 0 '
@@ -1413,12 +1431,12 @@ ItemIndex(105, 7) = 1 'current stack
 ItemIndex(105, 8) = 100 'max stack
 ItemIndex(105, 9) = 105 'Item ID
 
-ItemName(106, 0) = "Ruby
+ItemName(106, 0) = "Ruby"
 ItemName(106, 1) = "Crafting Material"
 ItemIndex(106, 0) = 3 'item type (1 means tool)
-ItemIndex(106, 1) = 160   'item texture x cord
+ItemIndex(106, 1) = 160 'item texture x cord
 ItemIndex(106, 2) = 64 'item texture y cord
-ItemIndex(106, 3) = 0 ' 
+ItemIndex(106, 3) = 0 '
 ItemIndex(106, 4) = 0 '
 ItemIndex(106, 5) = 0 '
 ItemIndex(106, 6) = 0 '
@@ -1426,12 +1444,12 @@ ItemIndex(106, 7) = 1 'current stack
 ItemIndex(106, 8) = 100 'max stack
 ItemIndex(106, 9) = 106 'Item ID
 
-ItemName(107, 0) = "Diamond
+ItemName(107, 0) = "Diamond"
 ItemName(107, 1) = "Crafting Material"
 ItemIndex(107, 0) = 3 'item type (1 means tool)
-ItemIndex(107, 1) = 176   'item texture x cord
+ItemIndex(107, 1) = 176 'item texture x cord
 ItemIndex(107, 2) = 64 'item texture y cord
-ItemIndex(107, 3) = 0 ' 
+ItemIndex(107, 3) = 0 '
 ItemIndex(107, 4) = 0 '
 ItemIndex(107, 5) = 0 '
 ItemIndex(107, 6) = 0 '
@@ -1440,12 +1458,12 @@ ItemIndex(107, 8) = 100 'max stack
 ItemIndex(107, 9) = 107 'Item ID
 
 
-ItemName(108, 0) = "Emerald
+ItemName(108, 0) = "Emerald"
 ItemName(108, 1) = "Crafting Material"
 ItemIndex(108, 0) = 3 'item type (1 means tool)
-ItemIndex(108, 1) = 192   'item texture x cord
+ItemIndex(108, 1) = 192 'item texture x cord
 ItemIndex(108, 2) = 64 'item texture y cord
-ItemIndex(108, 3) = 0 ' 
+ItemIndex(108, 3) = 0 '
 ItemIndex(108, 4) = 0 '
 ItemIndex(108, 5) = 0 '
 ItemIndex(108, 6) = 0 '
@@ -1454,12 +1472,12 @@ ItemIndex(108, 8) = 100 'max stack
 ItemIndex(108, 9) = 108 'Item ID
 
 
-ItemName(109, 0) = "Amethyst
+ItemName(109, 0) = "Amethyst"
 ItemName(109, 1) = "Crafting Material"
 ItemIndex(109, 0) = 3 'item type (1 means tool)
-ItemIndex(109, 1) = 208   'item texture x cord
+ItemIndex(109, 1) = 208 'item texture x cord
 ItemIndex(109, 2) = 64 'item texture y cord
-ItemIndex(109, 3) = 0 ' 
+ItemIndex(109, 3) = 0 '
 ItemIndex(109, 4) = 0 '
 ItemIndex(109, 5) = 0 '
 ItemIndex(109, 6) = 0 '
@@ -1467,12 +1485,12 @@ ItemIndex(109, 7) = 1 'current stack
 ItemIndex(109, 8) = 100 'max stack
 ItemIndex(109, 9) = 109 'Item ID
 
-ItemName(110, 0) = "Topaz
+ItemName(110, 0) = "Topaz"
 ItemName(110, 1) = "Crafting Material"
 ItemIndex(110, 0) = 3 'item type (1 means tool)
-ItemIndex(110, 1) = 224   'item texture x cord
+ItemIndex(110, 1) = 224 'item texture x cord
 ItemIndex(110, 2) = 64 'item texture y cord
-ItemIndex(110, 3) = 0 ' 
+ItemIndex(110, 3) = 0 '
 ItemIndex(110, 4) = 0 '
 ItemIndex(110, 5) = 0 '
 ItemIndex(110, 6) = 0 '
@@ -1480,12 +1498,12 @@ ItemIndex(110, 7) = 1 'current stack
 ItemIndex(110, 8) = 100 'max stack
 ItemIndex(110, 9) = 110 'Item ID
 
-ItemName(111, 0) = "Turquoise
+ItemName(111, 0) = "Turquoise"
 ItemName(111, 1) = "Crafting Material"
 ItemIndex(111, 0) = 3 'item type (1 means tool)
-ItemIndex(111, 1) = 240  'item texture x cord
+ItemIndex(111, 1) = 240 'item texture x cord
 ItemIndex(111, 2) = 64 'item texture y cord
-ItemIndex(111, 3) = 0 ' 
+ItemIndex(111, 3) = 0 '
 ItemIndex(111, 4) = 0 '
 ItemIndex(111, 5) = 0 '
 ItemIndex(111, 6) = 0 '
@@ -1494,12 +1512,12 @@ ItemIndex(111, 8) = 100 'max stack
 ItemIndex(111, 9) = 111 'Item ID
 
 
-ItemName(112, 0) = "Aetherian Opal
+ItemName(112, 0) = "Aetherian Opal"
 ItemName(112, 1) = "Specially engineered gemstone by the aetherian race to produce the absolute best imbuement powers"
 ItemIndex(112, 0) = 3 'item type (1 means tool)
-ItemIndex(112, 1) = 80   'item texture x cord
+ItemIndex(112, 1) = 80 'item texture x cord
 ItemIndex(112, 2) = 80 'item texture y cord
-ItemIndex(112, 3) = 0 ' 
+ItemIndex(112, 3) = 0 '
 ItemIndex(112, 4) = 0 '
 ItemIndex(112, 5) = 0 '
 ItemIndex(112, 6) = 0 '
@@ -1508,7 +1526,7 @@ ItemIndex(112, 8) = 100 'max stack
 ItemIndex(112, 9) = 112 'Item ID
 
 '113 imbuement station
-ItemName(113, 0) = "Imbuement Station
+ItemName(113, 0) = "Imbuement Station"
 ItemName(113, 1) = "Placeholder"
 ItemIndex(113, 0) = 0 'type
 ItemIndex(113, 1) = 128 'ssx
@@ -1521,19 +1539,19 @@ ItemIndex(113, 9) = 113 'Item ID
 
 
 '114 Sandstone
-ItemName(114, 0) = "Sandstone Wall
+ItemName(114, 0) = "Limestone Wall"
 ItemName(114, 1) = "Placeholder"
 ItemIndex(114, 0) = 0 'type
 ItemIndex(114, 1) = 144 'ssx
 ItemIndex(114, 2) = 96 'ssy
-ItemIndex(114, 3) = 27'tileID
+ItemIndex(114, 3) = 27 'tileID
 ItemIndex(114, 4) = 1 'layer
 ItemIndex(114, 7) = 1 'current stack
 ItemIndex(114, 8) = 100 'max stack
 ItemIndex(114, 9) = 114 'Item ID
 
 '115 calcite
-ItemName(115, 0) = "Calcite Wall
+ItemName(115, 0) = "Calcite Wall"
 ItemName(115, 1) = "Placeholder"
 ItemIndex(115, 0) = 0 'type
 ItemIndex(115, 1) = 160 'ssx
@@ -1545,7 +1563,7 @@ ItemIndex(115, 8) = 100 'max stack
 ItemIndex(115, 9) = 115 'Item ID
 
 '116 Sand
-ItemName(116, 0) = "Sand
+ItemName(116, 0) = "Sand"
 ItemName(116, 1) = "Placeholder"
 ItemIndex(116, 0) = 0 'type
 ItemIndex(116, 1) = 128 'ssx
@@ -1557,7 +1575,7 @@ ItemIndex(116, 8) = 100 'max stack
 ItemIndex(116, 9) = 116 'Item ID
 
 '117 glass
-ItemName(117, 0) = "Glass
+ItemName(117, 0) = "Glass"
 ItemName(117, 1) = "Placeholder"
 ItemIndex(117, 0) = 0 'type
 ItemIndex(117, 1) = 176 'ssx
@@ -1571,7 +1589,7 @@ ItemIndex(117, 9) = 117 'Item ID
 '118 Iron SCUBA Tool
 
 '119 asphault
-ItemName(119, 0) = "Asphault
+ItemName(119, 0) = "Asphault"
 ItemName(119, 1) = "Placeholder"
 ItemIndex(119, 0) = 0 'type
 ItemIndex(119, 1) = 192 'ssx
@@ -1583,7 +1601,7 @@ ItemIndex(119, 8) = 100 'max stack
 ItemIndex(119, 9) = 119 'Item ID
 
 '120 torch
-ItemName(120, 0) = "Torch
+ItemName(120, 0) = "Torch"
 ItemName(120, 1) = "Placeholder"
 ItemIndex(120, 0) = 0 'type
 ItemIndex(120, 1) = 208 'ssx
@@ -1594,7 +1612,7 @@ ItemIndex(120, 7) = 1 'current stack
 ItemIndex(120, 8) = 100 'max stack
 ItemIndex(120, 9) = 120 'Item ID
 
-ItemName(121, 0) = "Ice Campfire
+ItemName(121, 0) = "Ice Campfire"
 ItemName(121, 1) = "Placeholder"
 ItemIndex(121, 0) = 0 'type
 ItemIndex(121, 1) = 224 'ssx
@@ -1605,15 +1623,212 @@ ItemIndex(121, 7) = 1 'current stack
 ItemIndex(121, 8) = 100 'max stack
 ItemIndex(121, 9) = 121 'Item ID
 
-ItemName(122, 0) = "Coal
+ItemName(122, 0) = "Coal"
 ItemName(122, 1) = "Crafting Material"
 ItemIndex(122, 0) = 3 'item type (1 means tool)
-ItemIndex(122, 1) = 240   'item texture x cord
+ItemIndex(122, 1) = 240 'item texture x cord
 ItemIndex(122, 2) = 96 'item texture y cord
-ItemIndex(122, 3) = 0 ' 
+ItemIndex(122, 3) = 0 '
 ItemIndex(122, 4) = 0 '
 ItemIndex(122, 5) = 0 '
 ItemIndex(122, 6) = 0 '
 ItemIndex(122, 7) = 1 'current stack
 ItemIndex(122, 8) = 100 'max stack
 ItemIndex(122, 9) = 122 'Item ID
+
+ItemID = 123
+ItemName(ItemID, 0) = "Dynamite"
+ItemName(ItemID, 1) = "An Explosive Tile"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 80 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 63 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'sulpher
+ItemID = 124
+ItemName(ItemID, 0) = "Sulpher"
+ItemName(ItemID, 1) = "An Smelly Material that packs a punch"
+ItemIndex(ItemID, 0) = 3 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 96 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 0 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 0 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'depleted aetherian energy sphere
+
+ItemID = 125
+ItemName(ItemID, 0) = "Depleted Aetherian Energy Sphere"
+ItemName(ItemID, 1) = "Only an exorbitant power draw can deplete these so low they can't recharge themselves."
+ItemIndex(ItemID, 0) = 3 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 112 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 0 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 0 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+ItemID = 126
+ItemName(ItemID, 0) = "Limestone Nodule"
+ItemName(ItemID, 1) = "A chunk of limestone packed with ores"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 128 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 74 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+
+'red flower
+ItemID = 127
+ItemName(ItemID, 0) = "Red Flower"
+ItemName(ItemID, 1) = "A flower native to the deserts, it is hot to the touch"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 144 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 67 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'yellow flower
+ItemID = 128
+ItemName(ItemID, 0) = "Yellow Flower"
+ItemName(ItemID, 1) = "A very common flower in hot areas, can also grow on sand"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 160 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 68 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'green flower
+ItemID = 129
+ItemName(ItemID, 0) = "Green Flower"
+ItemName(ItemID, 1) = "A flower commonly growing in warm areas"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 176 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 69 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'purple flower
+ItemID = 130
+ItemName(ItemID, 0) = "Purple Flower"
+ItemName(ItemID, 1) = "A flower commonly growing in moderate areas"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 192 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 70 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'blue flower
+ItemID = 131
+ItemName(ItemID, 0) = "Blue Flower"
+ItemName(ItemID, 1) = "A flower commonly growing in cold areas"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 208 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 71 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'teal flower
+ItemID = 132
+ItemName(ItemID, 0) = "Teal Flower"
+ItemName(ItemID, 1) = "A flower commonly growing in very cold areas, often growing in the snow."
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 224 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 72 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+
+'ice flower
+ItemID = 133
+ItemName(ItemID, 0) = "Ice Flower"
+ItemName(ItemID, 1) = "A flower only found in the coldest areas of the permafrost, even in the warmth it is cold to the touch"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 240 'item texture x cord
+ItemIndex(ItemID, 2) = 112 'item texture y cord
+ItemIndex(ItemID, 3) = 73 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'gravel
+ItemID = 134
+ItemName(ItemID, 0) = "Gravel"
+ItemName(ItemID, 1) = "I wonder what grit this is"
+ItemIndex(ItemID, 0) = 0 'item type (0)Tile (1)Tool (2)Sword (3)Crafting Material (4)Consumables (5)Seeds
+ItemIndex(ItemID, 1) = 80 'item texture x cord
+ItemIndex(ItemID, 2) = 128 'item texture y cord
+ItemIndex(ItemID, 3) = 75 '(0,5) Tile ID (1,2) Max Durability
+ItemIndex(ItemID, 4) = 1 '(0,5) Layer Target (1,2) Current Durability
+ItemIndex(ItemID, 5) = 0 '(1) Tool Type (2) Swing Delay
+ItemIndex(ItemID, 6) = 0 '(1) Tool Strength (2) Damage
+ItemIndex(ItemID, 7) = 1 'current stack
+ItemIndex(ItemID, 8) = 100 'max stack
+ItemIndex(ItemID, 9) = ItemID 'Item ID
+ItemIndex(ItemID, 10) = 0 'is imbuable
+
+'Crumbled basalt
+'Basalt
+'clay

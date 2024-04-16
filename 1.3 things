@@ -1,0 +1,11 @@
+Terraquest 1.3 Finalizations, please dont add any more features till these are done
+
+* Fix weather and random tile updates
+* add teleporter functionality, using tile hand interactions. bringing us to
+* impliment tile hand interactions, a way to interact with a tile in a more sophisticated way using the (placeholder) Chat function
+* finish world loading menu
+* fix wrong seed bug (hacky fix, forcequit game and start new instance autoloading the world upon world creation)
+* fix whatever the fuck is going on with the cave entrances, come on weve had random dirt pits with collision for a minute now, and ladders can be placed anywhere
+* fix title screen background not loading
+* impliment exit to title screen
+* Impliment Imbuement station

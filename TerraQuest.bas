@@ -2,35 +2,32 @@ $NoPrefix
 Rem $Debug
 Option Explicit
 On Error GoTo ERRORHANDLE
-'randomize Using Timer
-Screen NewImage(641, 481, 32) '40x30
+Randomize Using Timer 'dont remove max, this is needed for splash text
+Screen NewImage(801, 601, 32) '40x30
 PrintMode KeepBackground
 DisplayOrder Hardware , Software
 Title "TerraQuest"
 
-'$include: 'Assets\Sources\VariableDeclaration.bi'
+'$Include: 'Assets\Sources\VariableDeclaration.bi'
 
-'$include: 'Assets\Sources\DefaultValues.bi'
+'$Include: 'Assets\Sources\DefaultValues.bi'
 
-'$include: 'Assets\Sources\TileIndex.bi'
+'$Include: 'Assets\Sources\TileIndex.bi'
 
-'$include: 'Assets\Sources\InventoryIndex.bi'
+'$Include: 'Assets\Sources\InventoryIndex.bi'
 
-'$include: 'Assets\Sources\CreativeInventory.bi'
+'$Include: 'Assets\Sources\CreativeInventory.bi'
 
-'$include: 'Assets\Sources\SplashText.bi'
+'$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240324A"
-Game.Version = "B1.3-240324A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240415A"
+Game.Version = "B1.3-240415A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
 Game.FCV = 1
 Game.NetPort = 46290
-
-Flag.FullCam = 1
-Flag.FullRender = 1
 
 Dim Shared RefreshOpt As Byte
 Dim Shared CurrentRefresh As Byte
@@ -43,6 +40,7 @@ Dim Shared ScreenShake.Remaining As Integer
 Dim Shared Flag.FullBright As Unsigned Bit
 Dim Shared Flag.CommandFeedback
 Dim Shared Flag.ChatOpen
+Dim Shared Flag.isStrafing As Unsigned Bit
 
 Dim Shared Exp.Active As Byte
 Dim Shared Exp.MapSizeX As Integer
@@ -50,8 +48,11 @@ Dim Shared Exp.MapSizeY As Integer
 Dim Shared Exp.ParLen As Integer
 
 Dim Shared Game.WorldCount
+Dim Shared Game.Language As String
 
 Dim Shared TextureSize As Unsigned Byte
+
+Dim Shared Dedication As String
 
 'Network Fuckery Variables and Types
 Dim Shared Network.PrimaryHost 'variable for telling the client whether we are the primary host, should not change at all during game session
@@ -61,8 +62,9 @@ Dim Shared Network.ClientPlayerName
 ReDim Shared Network.PlayerNames(10) As String
 ReDim Shared Network.PlayerDataArray(10, 5) '(playerID,Value)
 
+Game.Language = "English"
 
-
+Dedication = "For Donald & Marie, Thank you for giving me the creativity I needed to make this."
 
 
 TextureSize = 15
@@ -89,6 +91,10 @@ Select Case LCase$(Command$)
     Case "software"
         DefaultRenderMode = 0
         Flag.RenderOverride = 1
+    Case "debug"
+        Flag.DebugMode = 1
+        Flag.FullCam = 1
+        Flag.FullRender = 1
 
 End Select
 
@@ -106,14 +112,45 @@ Dim Shared Title.MapSize As Unsigned Byte
 Title.MapSize = 50
 
 
+'A little side note about this section of the code with how qb64 works
+'
+'The title sequence and probably even the title screen use classic line lable procedural code
+'while the rest of the game uses functional programming, i dont really care at this point
+'if it looks good and it works and it is readable then i dont see the problem, deal with it
+
+'Begin
+StartPreInit:
+INITIALIZE
+StartPostInit:
+
+'Roll Studio Splash (Whenever i start maxaroth studios/aetherian games
+
+'Roll Dedication
+Dim DedicateLimit
+Const DedicateTimer = 3
+Do
+    DedicateLimit = DedicateLimit + 1
+    If DedicateLimit > 60 * DedicateTimer Then
+        DedicateLimit = DedicateLimit + 1
+        Color RGBA(255, 255, 255, 255 - (DedicateLimit - (60 * DedicateTimer)))
+    End If
+    Locate ScreenRezY / 16 / 2, 1
+    CENTERPRINT Dedication
+    Limit 60
+    Display
+    Cls
+Loop Until 255 - (DedicateLimit - (60 * 5)) <= -32
+Color RGBA(255, 255, 255, 255)
+
+
 
 temptitle:
-INITIALIZE
 'If Exp.Active <> 1 Then GoTo oldtitle
 If Command$ = "oldtitle" GoTo oldtitle
 mainmenu:
+Dim Selected
 Do
-    Dim Selected
+
     Cls
     DEV
     Selected = Menu(0)
@@ -126,7 +163,10 @@ Do
             GoTo StartMultiplayer
         Case 3
             GoTo Settings
+        Case 4
+            System
     End Select
+    Limit 60
 Loop
 Error 102
 
@@ -156,7 +196,6 @@ loadworldmenu:
 Do
     While InKey$ <> "": Wend
     Cls
-    Files
     Input "Please enter a world name to load", WorldName
 
     LOADWORLD
@@ -190,8 +229,8 @@ Do
             GameMode = GameMode + 1
             If GameMode > 2 Then GameMode = 1
         Case 5
-            If WorldName = "" Or WorldName = "Worldname cannot be blank!" Then
-                WorldName = "Worldname cannot be blank!"
+            If WorldName = "" Or WorldName = Worldname_Cannot_Be_Blank Then
+                WorldName = Worldname_Cannot_Be_Blank
                 Exit Select
             End If
             Exp.MapSizeX = Title.MapSize
@@ -301,7 +340,7 @@ Error 102
 ERRORHANDLE:
 ErrorHandler
 Resume Next
-
+'idk why this is outside of anything, but it works and i dont remember why, dont touch it unless it breaks
 DisplayOrder GLRender , Hardware , Software
 game:
 KeyClear
@@ -345,6 +384,7 @@ Do
     Precip2
     If CurrentRefresh <= 0 Then SetLighting
     INTER
+    MouseCursorSelect
     Hud2
     ContainerUpdate
     ZOOM
@@ -396,7 +436,7 @@ Loop
 Error 102
 
 
-'$include: 'Assets\Sources\StructureData.bi'
+'$Include: 'Assets\Sources\StructureData.bi'
 
 
 
@@ -408,6 +448,109 @@ Error 102
 RepeaterOutpost:
 
 Data
+
+Function Worldname_Cannot_Be_Blank$
+    Select Case Game.Language
+        Case "English"
+            Worldname_Cannot_Be_Blank$ = "World name cannot be blank!"
+        Case "Spanish"
+            Worldname_Cannot_Be_Blank$ = "Nombre del mundo no puede estar en blanco."
+    End Select
+End Function
+
+
+
+
+Sub Localize
+    Select Case Game.Language
+        Case "English"
+            'do nothing because a reboot is required for language settings to take full effect and english is default  'Nope
+            Game.Title = "TerraQuest: Tales of Aetheria"
+        Case "Spanish"
+            Game.Title = "TerraQuest: Cuentos de Aetheria"
+    End Select
+End Sub
+
+Function FromLeft_MouseCursorHoverX
+    FromLeft_MouseCursorHoverX = Int(((MouseX - 5) - (3 * (Int(MouseX / 65)))) / 65)
+End Function
+
+
+
+Sub MouseCursorSelect
+    If MouseInput Then
+        Do: Loop Until MouseInput = 0
+        Select Case Flag.InventoryOpen
+            Case 0 'click item on hotbar to use it
+            Case 1 'set hover cursor to where mouse is leftclick to select   rightclick to split   middleclick to use
+                'switch hover page to region of mouse
+                Select EveryCase MouseX
+                    Case Is < ScreenRezX / 2 'left half of screen
+                        Select EveryCase MouseY
+
+                            Case Is < ScreenRezY / 2 'top left corner
+                                If Flag.ContainerOpen = 1 Then
+                                    CursorHoverPage = 2 'container
+
+                                    CursorHoverX = Int(((MouseX - 5) - (3 * (Int(MouseX / 65)))) / 65)
+                                    CursorHoverY = Int(((MouseY - 15) - (3 * (Int(MouseY / 65)))) / 65)
+
+                                    If CursorHoverX > ContainerSizeX Then CursorHoverX = ContainerSizeX
+                                    If CursorHoverX < 0 Then CursorHoverX = 0
+
+                                    If CursorHoverY > ContainerSizeY Then CursorHoverY = ContainerSizeY
+                                    If CursorHoverY < 0 Then CursorHoverY = 0
+                                End If
+                            Case Is > ScreenRezY / 2 'bottom left corner
+                                CursorHoverPage = 0 'inventory
+
+                                CursorHoverX = Int(((MouseX - 5) - (3 * (Int(MouseX / 65)))) / 65)
+                                CursorHoverY = Int(((ScreenRezY - MouseY - 85) - (3 * (Int((ScreenRezY - MouseY) / 65)))) / 65)
+
+                                If CursorHoverX > 5 Then CursorHoverX = 5
+                                If CursorHoverX < 0 Then CursorHoverX = 0
+
+                                If CursorHoverY > 2 Then CursorHoverY = 2
+                                If CursorHoverY < 0 Then CursorHoverY = 0
+
+                            Case Is > ScreenRezY - 80 'hotbar area
+                                CursorHoverPage = 1 'hotbar
+                                CursorHoverX = Int(((MouseX - 5) - (3 * (Int(MouseX / 65)))) / 65)
+                                CursorHoverY = 0
+
+                                If CursorHoverX > 5 Then CursorHoverX = 5
+                                If CursorHoverX < 0 Then CursorHoverX = 0
+
+                        End Select
+                    Case Is > ScreenRezX / 2 ' right half
+                        Select EveryCase MouseY
+
+                            Case Is > ScreenRezY / 2
+                                CursorHoverPage = 3 'crafting
+                                Select Case Player.CraftingLevel
+                                    Case 0 To 5
+                                        CursorHoverX = Int(((ScreenRezX - MouseX - 5) - (3 * (Int((ScreenRezX - MouseX) / 65)))) / 65)
+                                        CursorHoverY = Int(((ScreenRezY - MouseY - 5) - (3 * (Int((ScreenRezY - MouseY) / 65)))) / 65)
+
+                                        If CursorHoverX > Player.CraftingLevel Then CursorHoverX = Player.CraftingLevel
+                                        If CursorHoverX < 0 Then CursorHoverX = 0
+
+                                        If CursorHoverY > Player.CraftingLevel - 1 Then CursorHoverY = Player.CraftingLevel - 1
+                                        If CursorHoverY < 0 Then CursorHoverY = 0
+
+                                        If CursorHoverX = Player.CraftingLevel Then CursorHoverY = 0
+
+                                End Select
+
+                            Case Is < ScreenRezY / 2
+                                'cursorhoverpage=4 'armor/equipment
+
+                        End Select
+                End Select
+
+        End Select
+    End If
+End Sub
 
 Sub NetworkUpdate
     Select Case Network.PrimaryHost
@@ -775,6 +918,25 @@ Sub GenerateMap (Dimension As Byte)
             'generate hShaft
 
             'set features
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+                    'target dirt with air
+                    If GroundTile(ii, i) = 4 And WallTile(ii, i) = 1 Then
+                        If Ceil(Rnd * 25) = 5 Then
+                            WallTile(ii, i) = 74
+                        End If
+                    End If
+
+
+                    'target any air tile
+
+                    'target smooth snow with air
+                    'update set tiles
+                    UpdateTile ii, i
+                Next
+            Next
+
+
 
         Case 1 'aquifer
 
@@ -1045,6 +1207,24 @@ End Sub
 Sub ServerLoop
 End Sub
 
+Function Title_Go_Back$
+    Select Case Game.Language
+        Case "English"
+            Title_Go_Back = "Go Back"
+        Case "Spanish"
+            Title_Go_Back = "Regresar"
+    End Select
+End Function
+
+Function Title_Exit$
+    Select Case Game.Language
+        Case "English"
+            Title_Exit = "Exit to Desktop"
+        Case "Spanish"
+            Title_Exit = "Salir al Escritorio"
+    End Select
+End Function
+
 
 Sub Textbox (Diag, Opt)
     Dim BoxW
@@ -1085,7 +1265,7 @@ Sub Textbox (Diag, Opt)
                 BoxOffH = 1
             End If
 
-            PutImage (CameraPositionX - BoxW * 8, CameraPositionY - BoxH * 8), Texture.HudSprites, , (128 + (BoxW * 8), 0 + (BoxH * 8))-(8 + 128 + (BoxW * 8), 8 + 0 + (BoxH * 8))
+            '  PutImage (CameraPositionX - BoxW * 8, CameraPositionY - BoxH * 8), Texture.HudSprites, , (128 + (BoxW * 8), 0 + (BoxH * 8))-(8 + 128 + (BoxW * 8), 8 + 0 + (BoxH * 8))
 
         Next
     Next
@@ -1094,11 +1274,13 @@ Sub Textbox (Diag, Opt)
     Locate (ScreenRezY / 8 / 4) - (BoxH / 2), 1
     Select Case Diag
         Case 0
-            CENTERPRINT DiagSel(1, Opt) + "Single Player"
+            CENTERPRINT DiagSel(1, Opt) + Title_Single_Player
             Print
-            CENTERPRINT DiagSel(2, Opt) + "Multi Player"
+            CENTERPRINT DiagSel(2, Opt) + Title_multiPlayer
             Print
-            CENTERPRINT DiagSel(3, Opt) + "Settings"
+            CENTERPRINT DiagSel(3, Opt) + Title_Settings
+            Print
+            CENTERPRINT DiagSel(4, Opt) + Title_Exit
 
 
         Case 1
@@ -1119,10 +1301,10 @@ Sub Textbox (Diag, Opt)
             Print
             CENTERPRINT DiagSel(5, Opt) + "Sprite Packs"
             Print
-            CENTERPRINT DiagSel(6, Opt) + "Controls"
+            CENTERPRINT DiagSel(6, Opt) + Title_Controls
             Print
             Print
-            CENTERPRINT DiagSel(7, Opt) + "Main Menu"
+            CENTERPRINT DiagSel(7, Opt) + Title_Go_Back
         Case 2
             CENTERPRINT DiagSel(1, Opt) + "Create World"
             Print
@@ -1130,7 +1312,7 @@ Sub Textbox (Diag, Opt)
             Print
             Print
             Print
-            CENTERPRINT DiagSel(3, Opt) + "Go Back"
+            CENTERPRINT DiagSel(3, Opt) + Title_Go_Back
 
         Case 3
             CENTERPRINT DiagSel(1, Opt) + "World Name: " + WorldName
@@ -1153,9 +1335,9 @@ Sub Textbox (Diag, Opt)
             Print
             Print
             Print
-            CENTERPRINT DiagSel(5, Opt) + "Create World"
+            CENTERPRINT DiagSel(5, Opt) + Title_Create_World
             Print
-            CENTERPRINT DiagSel(6, Opt) + "Go Back"
+            CENTERPRINT DiagSel(6, Opt) + Title_Go_Back
         Case 4
             CENTERPRINT DiagSel(1, Opt) + "Move Up: W"
             CENTERPRINT DiagSel(2, Opt) + "Move Down: S"
@@ -1174,7 +1356,7 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(15, Opt) + "Inventory Drop Item: Q"
             Print
             CENTERPRINT DiagSel(16, Opt) + "More..."
-            CENTERPRINT DiagSel(17, Opt) + "Back"
+            CENTERPRINT DiagSel(17, Opt) + Title_Go_Back
 
         Case 5
             CENTERPRINT DiagSel(1, Opt) + "Use Hotbar 1: 1"
@@ -1190,7 +1372,7 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(11, Opt) + "Open Legacy Commands (Debug Only): /"
             CENTERPRINT DiagSel(12, Opt) + "Open Chat: T"
             Print
-            CENTERPRINT DiagSel(13, Opt) + "Back"
+            CENTERPRINT DiagSel(13, Opt) + Title_Go_Back
 
         Case 6
             CENTERPRINT DiagSel(1, Opt) + "Username: "
@@ -1202,7 +1384,7 @@ Sub Textbox (Diag, Opt)
             Print
             CENTERPRINT DiagSel(4, Opt) + "Join Game (Specify IP)"
             Print
-            CENTERPRINT DiagSel(5, Opt) + "Back"
+            CENTERPRINT DiagSel(5, Opt) + Title_Go_Back
 
     End Select
     Display
@@ -1235,6 +1417,55 @@ Function DiagSel$ (Cur, Hil)
     If Cur = Hil Then DiagSel = "" Else DiagSel = " "
 End Function
 
+Function Title_Settings$
+    Select Case Game.Language
+        Case "English"
+            Title_Settings = "Settings"
+        Case "Spanish"
+            Title_Settings = "Ajustes"
+    End Select
+End Function
+
+Function Title_Single_Player$
+    Select Case Game.Language
+        Case "English"
+            Title_Single_Player = "Single Player"
+        Case "Spanish"
+            Title_Single_Player = "Solo Jugador"
+    End Select
+End Function
+
+Function Title_multiPlayer$
+    Select Case Game.Language
+        Case "English"
+            Title_multiPlayer = "MultiPlayer"
+        Case "Spanish"
+            Title_multiPlayer = "MultiJugador"
+    End Select
+End Function
+
+
+Function Title_Create_World$
+    Select Case Game.Language
+        Case "English"
+            Title_Create_World = "Create New World"
+        Case "Spanish"
+            Title_Create_World = "Crear Mundo Nuevo"
+    End Select
+End Function
+
+Function Title_Controls$
+    Select Case Game.Language
+        Case "English"
+            Title_Controls = "Controls"
+        Case "Spanish"
+            Title_Controls = "Mandos"
+    End Select
+End Function
+
+
+
+
 Function Menu (MenuNum)
     Static HighlightedOption
     If HighlightedOption = 0 Then HighlightedOption = 1
@@ -1251,7 +1482,7 @@ Function Menu (MenuNum)
     'imma be honest it got lazy, im high af
     Dim MenuImageLong As Long
     MenuImageLong = LoadImage("Assets\Sprites\TitleScreen\titlescreen1.png", 32)
-    If MenuImageLong <> -1 Then PutImage (0, 0), MenuImageLong, 0, (0, 0)
+    '  If MenuImageLong <> -1 Then PutImage (0, 0), MenuImageLong, , (0, 0)
 
     Select Case MenuNum
         Case 0 ' Title Screen
@@ -1263,14 +1494,14 @@ Function Menu (MenuNum)
             'Draw Options buttons
 
             Textbox 0, HighlightedOption
-            OptCount = 3
+            OptCount = 4
         Case 1 'settings
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Settings"
+            CENTERPRINT Title_Settings
             'put splash text
             'Draw Options buttons
 
@@ -1282,7 +1513,7 @@ Function Menu (MenuNum)
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Single Player"
+            CENTERPRINT Title_Single_Player
             'put splash text
             'Draw Options buttons
 
@@ -1293,7 +1524,7 @@ Function Menu (MenuNum)
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Create New World"
+            CENTERPRINT Title_Create_World
             Textbox 3, HighlightedOption
             OptCount = 6
         Case 4 'Controls
@@ -1301,7 +1532,7 @@ Function Menu (MenuNum)
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Controls"
+            CENTERPRINT Title_Controls
             Textbox 4, HighlightedOption
             OptCount = 17
         Case 5 'Controls 2
@@ -1309,7 +1540,7 @@ Function Menu (MenuNum)
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Controls"
+            CENTERPRINT Title_Controls
             Textbox 5, HighlightedOption
             OptCount = 13
         Case 6 'Start Multiplayer
@@ -1317,7 +1548,7 @@ Function Menu (MenuNum)
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "MultiPlayer"
+            CENTERPRINT Title_multiPlayer
             Textbox 6, HighlightedOption
             OptCount = 13
 
@@ -1334,7 +1565,7 @@ Function Menu (MenuNum)
 
 
 
-
+    Limit 30
     'if enter is pressed, then return option number, starting at 1, otherwise return 0
 End Function
 
@@ -1722,48 +1953,48 @@ Sub PrecipOverlay
 
 End Sub
 
-Sub UseItem (Slot)
+Sub UseItem (Slot, vSlot)
     Static ConsumeCooldown
     Static WeaponCooldown
     Static ToolDelay
-    Select Case Inventory(0, Slot, 0)
+    Select Case Inventory(vSlot, Slot, 0)
         Case 0, 5 'Block placing
-            If Inventory(0, Slot, 0) = 5 Then
+            If Inventory(vSlot, Slot, 0) = 5 Then
                 If GroundTile(FacingX, FacingY) <> 21 Then Exit Sub
             End If
-            If Inventory(0, Slot, 3) = 16 Then
-                If CurrentDimension = 0 Then Inventory(0, Slot, 4) = 0
-                If CurrentDimension = -1 Then Inventory(0, Slot, 4) = 1
+            If Inventory(vSlot, Slot, 3) = 16 Then
+                If CurrentDimension = 0 Then Inventory(vSlot, Slot, 4) = 0
+                If CurrentDimension = -1 Then Inventory(vSlot, Slot, 4) = 1
             End If
-            Select Case Inventory(0, Slot, 4)
+            Select Case Inventory(vSlot, Slot, 4)
                 Case 0
                     If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
-                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        GroundTile(FacingX, FacingY) = Inventory(vSlot, Slot, 3)
                         TileData(FacingX, FacingY, 4) = 255
                         If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                            Inventory(vSlot, Slot, 7) = Inventory(vSlot, Slot, 7) - 1
+                            If Inventory(vSlot, Slot, 7) = 0 Then EmptySlot Slot, vSlot
                         End If
                         UpdateTile FacingX, FacingY
                         SpreadLight (1)
                     End If
                 Case 1
                     If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
-                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        WallTile(FacingX, FacingY) = Inventory(vSlot, Slot, 3)
                         If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
                             NewContainer SavedMapX, SavedMapY, FacingX, FacingY
                         End If
                         TileData(FacingX, FacingY, 5) = 255
                         If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                            Inventory(vSlot, Slot, 7) = Inventory(vSlot, Slot, 7) - 1
+                            If Inventory(vSlot, Slot, 7) = 0 Then EmptySlot Slot, vSlot
                         End If
                         UpdateTile FacingX, FacingY
                         SpreadLight (1)
                     End If
             End Select
         Case 1 'Tools
-            Select Case Inventory(0, Slot, 5)
+            Select Case Inventory(vSlot, Slot, 5)
                 Case 0 'shovel
                     If GroundTile(FacingX, FacingY) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
@@ -1778,8 +2009,8 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            If TileIndexData(GroundTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
-                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            If TileIndexData(GroundTile(FacingX, FacingY), 4) - Inventory(vSlot, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(vSlot, Slot, 6)
                                 TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
                             End If
                             ToolDelay = 0
@@ -1788,7 +2019,7 @@ Sub UseItem (Slot)
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
                 Case 1, 2 'axe, pickaxe
-                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select 'to make sure if tile is stone or metal that you are using a pickaxe
+                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(vSlot, Slot, 5) - 1 Then Exit Select 'to make sure if tile is stone or metal that you are using a pickaxe
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
@@ -1806,8 +2037,8 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            If TileIndexData(WallTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
-                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                            If TileIndexData(WallTile(FacingX, FacingY), 4) - Inventory(vSlot, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(vSlot, Slot, 6)
                                 TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
                             End If
                             ToolDelay = 0
@@ -1827,7 +2058,7 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(vSlot, Slot, 6)
                             TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
                             ToolDelay = 0
                         End If
@@ -1856,21 +2087,21 @@ Sub UseItem (Slot)
 
                 Next
                 'apply weapon cooldown
-                WeaponCooldown = CurrentTick + Inventory(0, Slot, 5)
+                WeaponCooldown = CurrentTick + Inventory(vSlot, Slot, 5)
 
             End If
 
 
         Case 4 'consumables
             If CurrentTick >= ConsumeCooldown Then
-                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
+                If EffectIndex("Consume " + ItemName(Inventory(vSlot, Slot, 9), 0), 0) = 3 Then
                     If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
                 End If
-                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0), 0
+                Effects 1, "Consume " + ItemName(Inventory(vSlot, Slot, 9), 0), 0
 
                 If GameMode <> 1 Then
-                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                    Inventory(vSlot, Slot, 7) = Inventory(vSlot, Slot, 7) - 1
+                    If Inventory(vSlot, Slot, 7) = 0 Then EmptySlot Slot, 0
                 End If
 
                 ConsumeCooldown = CurrentTick + 10
@@ -2362,29 +2593,29 @@ Function LootTable (tType As Byte, ID As Integer)
             Select Case ID
                 Case 19 'low tier stone
                     LootTable = 29 'stone
-                    If Int(Rnd * 50) < 5 Then LootTable = 122 'coal
-                    If Int(Rnd * 100) < 15 Then LootTable = 38 'tin
-                    If Int(Rnd * 100) < 8 Then LootTable = 39 'copper
+                    If Int(Rnd * 100) < 15 Then LootTable = 122 'coal
+                    If Int(Rnd * 100) < 20 Then LootTable = 38 'tin
+                    If Int(Rnd * 100) < 10 Then LootTable = 39 'copper
                 Case 28 'calcite
                     LootTable = 29 'stone
-                    If Int(Rnd * 100) < 15 Then LootTable = 40 'iron
-                    If Int(Rnd * 100) < 8 Then LootTable = 41 'platinum
-                    If Int(Rnd * 600) < 5 Then LootTable = 107 'diamond
-                    If Int(Rnd * 600) < 5 Then LootTable = 108 'emerald
+                    If Int(Rnd * 100) < 20 Then LootTable = 40 'iron
+                    If Int(Rnd * 100) < 10 Then LootTable = 41 'platinum
+                    If Int(Rnd * 500) < 5 Then LootTable = 107 'diamond
+                    If Int(Rnd * 500) < 5 Then LootTable = 108 'emerald
                     If Int(Rnd * 1000) < 5 Then LootTable = 104 'aetherian energy sphere
 
                 Case 29 'sand
                     LootTable = 116 'sand
-                    If Int(Rnd * 400) < 5 Then LootTable = 105 'ruby
-                    If Int(Rnd * 400) < 5 Then LootTable = 106 'saphire
-                    If Int(Rnd * 1000) < 3 And CurrentDimension = 1 Then LootTable = 103 'Imbuement Refraction Core
+                    If Int(Rnd * 500) < 5 Then LootTable = 105 'ruby
+                    If Int(Rnd * 500) < 5 Then LootTable = 106 'saphire
+                    If Int(Rnd * 1000) < 10 And CurrentDimension = 1 Then LootTable = 103 'Imbuement Refraction Core
                 Case 27 'limestone
                     LootTable = 114
-                    If Int(Rnd * 150) < 16 Then LootTable = 42 'titanium
+                    If Int(Rnd * 100) < 15 Then LootTable = 42 'titanium
                     If Int(Rnd * 700) < 5 Then LootTable = 109 'Amethyst
                 Case 74 'limestone nodule
-                    LootTable = 114
-                    If Int(Rnd * 50) < 16 Then LootTable = 42 'titanium
+                    LootTable = 126
+                    If Int(Rnd * 50) < 15 Then LootTable = 42 'titanium
                     If Int(Rnd * 200) < 5 Then LootTable = 109 'Amethyst
 
             End Select
@@ -2471,7 +2702,7 @@ Sub UseHotBar
 
         If Item1 Then
             CursorHoverX = 0
-            UseItem 0
+            UseItem 0, 0
             iii = 0
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
@@ -2479,35 +2710,35 @@ Sub UseHotBar
         End If
         If Item2 Then
             CursorHoverX = 1
-            UseItem 1
+            UseItem 1, 0
             iii = 1
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item3 Then
             CursorHoverX = 2
-            UseItem 2
+            UseItem 2, 0
             iii = 2
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item4 Then
             CursorHoverX = 3
-            UseItem 3
+            UseItem 3, 0
             iii = 3
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item5 Then
             CursorHoverX = 4
-            UseItem 4
+            UseItem 4, 0
             iii = 4
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item6 Then
             CursorHoverX = 5
-            UseItem 5
+            UseItem 5, 0
             iii = 5
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
@@ -3144,6 +3375,59 @@ End Sub
 Sub InputCursor
     Dim As Byte i, ii, iii
 
+
+    If InventoryUp Then
+        CursorHoverY = CursorHoverY + 1
+        If CursorHoverPage = 2 Then CursorHoverY = CursorHoverY - 2
+
+    End If
+    If InventoryDown Then
+        CursorHoverY = CursorHoverY - 1
+        If CursorHoverPage = 2 Then CursorHoverY = CursorHoverY + 2
+    End If
+    If InventoryLeft Then
+        CursorHoverX = CursorHoverX - 1
+        If CursorHoverPage = 3 Then CursorHoverX = CursorHoverX + 2
+    End If
+    If InventoryRight Then
+        CursorHoverX = CursorHoverX + 1
+        If CursorHoverPage = 3 Then CursorHoverX = CursorHoverX - 2
+    End If
+    If InventoryUse And CursorHoverPage = 1 Or InventoryUse And CursorHoverPage = 0 Then
+        UseItem CursorHoverX, CursorHoverY + 1 - CursorHoverPage
+    End If
+
+    Select Case CursorHoverPage
+        Case 0 'Inventory
+            If CursorHoverX > 5 Then CursorHoverX = 0: CreativePage = CreativePage + 1
+            If CursorHoverX < 0 Then CursorHoverX = 5: CreativePage = CreativePage - 1
+            If InventoryPageRight Then CreativePage = CreativePage + 1
+            If InventoryPageLeft Then CreativePage = CreativePage - 1
+
+            If CreativePage > CreativePages Then CreativePage = 0
+            If CreativePage < 0 Then CreativePage = CreativePages
+            If CursorHoverY > 2 Then CursorHoverY = 0
+            If CursorHoverY < 0 Then CursorHoverY = 2
+        Case 1 'Hotbar
+            If CursorHoverX > 5 Then CursorHoverX = 0
+            If CursorHoverX < 0 Then CursorHoverX = 5
+            CursorHoverY = 0
+        Case 2 'Container
+            If CursorHoverX > ContainerSizeX Then CursorHoverX = 0
+            If CursorHoverX < 0 Then CursorHoverX = ContainerSizeX
+            If CursorHoverY > ContainerSizeY Then CursorHoverY = 0
+            If CursorHoverY < 0 Then CursorHoverY = ContainerSizeY
+        Case 3 'Crafting
+            If CursorHoverX > Player.CraftingLevel Then CursorHoverX = 0
+            If CursorHoverX < 0 Then CursorHoverX = Player.CraftingLevel
+            If CursorHoverY > Player.CraftingLevel - 1 Then CursorHoverY = 0
+            If CursorHoverY < 0 Then CursorHoverY = Player.CraftingLevel - 1
+            If CursorHoverX = Player.CraftingLevel Then CursorHoverY = 0
+
+    End Select
+
+
+
     If InventorySelect Then
         If CursorMode = 0 Then
             CursorSelectedX = CursorHoverX
@@ -3211,54 +3495,6 @@ Sub InputCursor
         End Select
     End If
 
-    If InventoryUp Then
-        CursorHoverY = CursorHoverY + 1
-        If CursorHoverPage = 2 Then CursorHoverY = CursorHoverY - 2
-
-    End If
-    If InventoryDown Then
-        CursorHoverY = CursorHoverY - 1
-        If CursorHoverPage = 2 Then CursorHoverY = CursorHoverY + 2
-    End If
-    If InventoryLeft Then
-        CursorHoverX = CursorHoverX - 1
-        If CursorHoverPage = 3 Then CursorHoverX = CursorHoverX + 2
-    End If
-    If InventoryRight Then
-        CursorHoverX = CursorHoverX + 1
-        If CursorHoverPage = 3 Then CursorHoverX = CursorHoverX - 2
-    End If
-    If InventoryUse And CursorHoverPage = 1 Then
-        UseItem CursorHoverX
-    End If
-
-    Select Case CursorHoverPage
-        Case 0 'Inventory
-            If CursorHoverX > 5 Then CursorHoverX = 0: CreativePage = CreativePage + 1
-            If CursorHoverX < 0 Then CursorHoverX = 5: CreativePage = CreativePage - 1
-            If CreativePage > CreativePages Then CreativePage = 0
-            If CreativePage < 0 Then CreativePage = CreativePages
-            If CursorHoverY > 2 Then CursorHoverY = 0
-            If CursorHoverY < 0 Then CursorHoverY = 2
-        Case 1 'Hotbar
-            If CursorHoverX > 5 Then CursorHoverX = 0
-            If CursorHoverX < 0 Then CursorHoverX = 5
-            CursorHoverY = 0
-        Case 2 'Container
-            If CursorHoverX > ContainerSizeX Then CursorHoverX = 0
-            If CursorHoverX < 0 Then CursorHoverX = ContainerSizeX
-            If CursorHoverY > ContainerSizeY Then CursorHoverY = 0
-            If CursorHoverY < 0 Then CursorHoverY = ContainerSizeY
-        Case 3 'Crafting
-            If CursorHoverX > Player.CraftingLevel Then CursorHoverX = 0
-            If CursorHoverX < 0 Then CursorHoverX = Player.CraftingLevel
-            If CursorHoverY > Player.CraftingLevel - 1 Then CursorHoverY = 0
-            If CursorHoverY < 0 Then CursorHoverY = Player.CraftingLevel - 1
-            If CursorHoverX = Player.CraftingLevel Then CursorHoverY = 0
-
-    End Select
-
-
 
 End Sub
 
@@ -3294,29 +3530,41 @@ End Sub
 
 
 Function Item1
-    If Flag.ChatOpen = 0 Then Item1 = KeyDown(49)
+    If Flag.ChatOpen = 0 Then
+        Item1 = KeyDown(49)
+        If MouseButton(1) And FromLeft_MouseCursorHoverX = 0 Then Item1 = -1
+    End If
 End Function
 
 Function Item2
     If Flag.ChatOpen = 0 Then Item2 = KeyDown(50)
+    If MouseButton(1) And FromLeft_MouseCursorHoverX = 1 Then Item2 = -1
 End Function
 
 Function Item3
     If Flag.ChatOpen = 0 Then Item3 = KeyDown(51)
+    If MouseButton(1) And FromLeft_MouseCursorHoverX = 2 Then Item3 = -1
 End Function
 
 Function Item4
     If Flag.ChatOpen = 0 Then Item4 = KeyDown(52)
+    If MouseButton(1) And FromLeft_MouseCursorHoverX = 3 Then Item4 = -1
 End Function
 
 Function Item5
     If Flag.ChatOpen = 0 Then Item5 = KeyDown(53)
+    If MouseButton(1) And FromLeft_MouseCursorHoverX = 4 Then Item5 = -1
 End Function
 
 Function Item6
     If Flag.ChatOpen = 0 Then Item6 = KeyDown(54)
+    If MouseButton(1) And FromLeft_MouseCursorHoverX = 5 Then Item6 = -1
 End Function
 
+
+Function ToggleStrafe
+    If Flag.ChatOpen = 0 Then ToggleStrafe = KeyDown(100306)
+End Function
 
 
 Function MoveUp
@@ -3346,6 +3594,7 @@ Function InventoryUp
 
 
 End Function
+
 
 Function InventoryDown
     Static SingleHit As Byte
@@ -3394,26 +3643,78 @@ Function InventoryShiftTab
     End If
 End Function
 
+Function InventoryPageRight
+    Static SingleHit As Byte
+    Static SingleMouseHit As Byte
+    If KeyDown(61) And SingleHit <> 1 Then
+        InventoryPageRight = KeyDown(61)
+        SingleHit = 1
+    ElseIf KeyDown(61) = 0 Then SingleHit = 0
+    End If
+
+    If MouseWheel = 1 And SingleMouseHit <> 1 Then
+        InventoryPageRight = -1
+        SingleMouseHit = 1
+    ElseIf MouseWheel = 0 Then SingleMouseHit = 0
+    End If
+End Function
+
+Function InventoryPageLeft
+    Static SingleHit As Byte
+    Static SingleMouseHit As Byte
+    If KeyDown(45) And SingleHit <> 1 Then
+        InventoryPageLeft = KeyDown(45)
+        SingleHit = 1
+    ElseIf KeyDown(45) = 0 Then SingleHit = 0
+    End If
+
+    If MouseWheel = -1 And SingleMouseHit <> 1 Then
+        InventoryPageLeft = -1
+        SingleMouseHit = 1
+    ElseIf MouseWheel = 0 Then SingleMouseHit = 0
+    End If
+End Function
+
+
+
+
 
 Function InventorySelect
     Static SingleHit As Byte
+    Static SingleMouseHit As Byte
     If KeyDown(13) And SingleHit <> 1 Then
         InventorySelect = KeyDown(13)
         SingleHit = 1
     ElseIf KeyDown(13) = 0 Then SingleHit = 0
     End If
+
+    If MouseButton(1) And SingleMouseHit <> 1 Then
+        InventorySelect = MouseButton(1)
+        SingleMouseHit = 1
+    ElseIf MouseButton(1) = 0 Then SingleMouseHit = 0
+    End If
 End Function
+
 Function InventorySplit
     Static SingleHit As Byte
+    Static SingleMouseHit As Byte
     If KeyDown(92) And SingleHit <> 1 Then
         InventorySplit = KeyDown(92)
         SingleHit = 1
     ElseIf KeyDown(92) = 0 Then SingleHit = 0
     End If
+
+    If MouseButton(2) And SingleMouseHit <> 1 Then
+        InventorySplit = MouseButton(2)
+        SingleMouseHit = 1
+    ElseIf MouseButton(2) = 0 Then SingleMouseHit = 0
+    End If
+
 End Function
 
 Function InventoryUse
-    InventoryUse = KeyDown(32)
+    If KeyDown(32) Or MouseButton(3) Then InventoryUse = -1
+    'InventoryUse = KeyDown(32)
 End Function
 
 Function InventoryDrop
@@ -3551,7 +3852,7 @@ Sub RenderEntities (PlayerRender As Byte)
         'im tired and too lazy to actually rewrite this properly so im just saying fuck it and pasting the shitty code i already had with a few tweeks, if you feel like rewriting this utter garbage properly, suit yourself
         Select Case Facing
             Case 0
-                If MovingY <> 0 Then
+                If MovingY <> 0 Or MovingX <> 0 And Flag.isStrafing = 1 Then
                     If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 0)-(15, 17 - Swim)
                     If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 0)-(31, 17 - Swim)
                     If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 0)-(47, 17 - Swim)
@@ -3560,7 +3861,7 @@ Sub RenderEntities (PlayerRender As Byte)
                     PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 0)-(31, 17 - Swim)
                 End If
             Case 1
-                If MovingY <> 0 Then
+                If MovingY <> 0 Or MovingX <> 0 And Flag.isStrafing = 1 Then
                     If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 36)-(15, 54 - Swim)
                     If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 36)-(31, 53 - Swim)
                     If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 36)-(47, 53 - Swim)
@@ -3570,7 +3871,7 @@ Sub RenderEntities (PlayerRender As Byte)
                 End If
 
             Case 2
-                If MovingX <> 0 Then
+                If MovingX <> 0 Or MovingY <> 0 And Flag.isStrafing = 1 Then
                     If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 54)-(15, 71 - Swim)
                     If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 54)-(31, 71 - Swim)
                     If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 54)-(47, 71 - Swim)
@@ -3580,7 +3881,7 @@ Sub RenderEntities (PlayerRender As Byte)
                 End If
 
             Case 3
-                If MovingX <> 0 Then
+                If MovingX <> 0 Or MovingY <> 0 And Flag.isStrafing = 1 Then
                     If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 18)-(15, 35 - Swim)
                     If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 18)-(31, 35 - Swim)
                     If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 18)-(47, 35 - Swim)
@@ -3892,6 +4193,19 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 7
             End Select
+
+        Case "OnTop Deep Water"
+            Select Case Value
+                Case 0
+                    EffectIndex = 2
+                Case 1
+                    EffectIndex = 2
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = 9
+            End Select
+
         Case "OnTop Wooden Ladder"
             Select Case Value
                 Case 0
@@ -4079,27 +4393,31 @@ Sub Move
     Player.lasty = Player.y
 
 
+    Flag.isStrafing = ToggleStrafe
+
+
     If MoveUp Then
         Player.vy = Player.vy - TileData(PlayerTileX, PlayerTileY, 9)
-        Player.facing = 0
+        If Flag.isStrafing = 0 Then Player.facing = 0
         Player.movingy = 1
     End If
     If MoveDown Then
         Player.vy = Player.vy + TileData(PlayerTileX, PlayerTileY, 9)
-        Player.facing = 1
+        If Flag.isStrafing = 0 Then Player.facing = 1
         Player.movingy = 1
 
     End If
     If MoveLeft Then
         Player.vx = Player.vx - TileData(PlayerTileX, PlayerTileY, 9)
-        Player.facing = 2
+        If Flag.isStrafing = 0 Then Player.facing = 2
         Player.movingx = 1
     End If
     If MoveRight Then
         Player.vx = Player.vx + TileData(PlayerTileX, PlayerTileY, 9)
-        Player.facing = 3
+        If Flag.isStrafing = 0 Then Player.facing = 3
         Player.movingx = 1
     End If
+
 
     If Player.vy > TileData(PlayerTileX, PlayerTileY, 10) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10)
     If Player.vy < TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2)
@@ -4810,6 +5128,7 @@ Sub DEV
         If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
         If RefreshOpt > 0 Then ENDPRINT "FrameSkip Enabled (" + Str$(RefreshOpt) + " fpf)"
+        ENDPRINT "Current Language: " + Game.Language
         ENDPRINT "Screen Resolution:" + Str$(ScreenRezX) + " x" + Str$(ScreenRezY)
         Print
         ENDPRINT "Facing tile data:"
@@ -5353,18 +5672,19 @@ End Sub
 Sub GameChat
     PrintMode FillBackground
     Color , RGBA(0, 0, 0, 128)
-
+    'TODO: add a way to knock older messages off of the log so the game doesnt crash after too many messages
     Dim i
     Dim ChatStart
     Dim ChatCount
     ChatStart = (ScreenRezY / 16) - 7
     For i = ChatLastMessage To 0 Step -1
-        If Val(ChatLog(i, 1)) >= 0 Then
+        If Val(ChatLog(i, 1)) >= 0 Or Flag.ChatOpen = 1 Then
             '  Locate 1, 1: Print ChatStart, ChatCount, ChatLastMessage, ChatLog(ChatLastMessage, 0)
             Locate ChatStart - ChatCount, 1: Print ChatLog(i, 0)
             ChatCount = ChatCount + 1
             ChatLog(i, 1) = Str$(Val(ChatLog(i, 1)) - 1)
         End If
+        If Flag.ChatOpen = 1 And i < ChatLastMessage - 20 Then Exit For
     Next
     PrintMode KeepBackground
     Color , RGBA(0, 0, 0, 0)
@@ -5611,7 +5931,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             TempRender
             If Feedback = 1 Then SendChat Chr$(21) + "Global Light Level Updated"
         Case "/genmap"
-            GenerateMap 0
+            GenerateMap CurrentDimension
             If Feedback = 1 Then SendChat Chr$(21) + "Map Regenerated"
         Case "/give", "/item"
             NewStack Val(Parameters(0)), Val(Parameters(1))
@@ -5672,14 +5992,51 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             LOADMAP (Parameters(0))
             If Feedback = 1 Then SendChat Chr$(21) + "Loaded map files over current map"
 
+        Case "/language"
+            Select Case Parameters(0)
+                Case "en", "eng", "english"
+                    Game.Language = "English"
+                Case "es", "spa", "spanish"
+                    Game.Language = "Spanish"
+            End Select
+            If Feedback = 1 Then SendChat Chr$(21) + Language_has_been_updated
+
             '--------------------------------
         Case Else
-            SendChat Chr$(21) + "Command " + Chr$(34) + CommandBase + Chr$(34) + " Not Found."
+            SendChat Chr$(21) + Command_not_found_1 + Chr$(34) + CommandBase + Chr$(34) + Command_not_found_2
 
     End Select
 
 
 End Sub
+
+Function Command_not_found_1$
+    Select Case Game.Language
+        Case "English"
+            Command_not_found_1 = "Command "
+        Case "Spanish"
+            Command_not_found_1 = "Comando "
+    End Select
+End Function
+
+Function Command_not_found_2$
+    Select Case Game.Language
+        Case "English"
+            Command_not_found_2 = " Not Found."
+        Case "Spanish"
+            Command_not_found_2 = " No Encontrado."
+    End Select
+End Function
+
+
+Function Language_has_been_updated$
+    Select Case Game.Language
+        Case "English"
+            Language_has_been_updated = "Language has been updated."
+        Case "Spanish"
+            Language_has_been_updated = "Idioma Actualizado."
+    End Select
+End Function
 
 '  worldcommands ("/maptp "+targetmapx+ " " +targetmapy,0)
 '    worldcommands ("/tp "+targettilex+ " " +targettiley,0)
@@ -5698,6 +6055,7 @@ Sub SAVESETTINGS
     Put #1, 4, ScreenRezY
     If FullScreen = 0 Then Put #1, 5, zero
     If FullScreen = 2 Then Put #1, 5, one
+    Put #1, 6, Game.Language
     Close #1
 
 End Sub
@@ -5713,7 +6071,7 @@ Sub LOADSETTINGS
     Get #1, 3, ScreenRezX
     Get #1, 4, ScreenRezY
     Get #1, 5, Settings.FullScreen
-
+    Get #1, 6, Game.Language
     Close #1
 
 End Sub
@@ -6299,9 +6657,9 @@ Sub INITIALIZE
     ScreenRezY = DesktopHeight
     'ScreenRezX = 640
     'ScreenRezY = 480
-    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
     FullScreen SquarePixels
-    If ForcedWindowed = 1 Then ScreenRezX = 640: ScreenRezY = 480: FullScreen Off
+    If ForcedWindowed = 1 Then ScreenRezX = 800: ScreenRezY = 600: FullScreen Off
+    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
 
     If DirExists("Assets") Then
         If DirExists("Assets\Sprites") = 0 Then Error 100
@@ -6333,7 +6691,8 @@ Sub INITIALIZE
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
     If Settings.FullScreen = 1 Then FullScreen SquarePixels
     If Settings.FullScreen = 0 Then FullScreen Off
-    If ForcedWindowed = 1 Then ScreenRezX = 640: ScreenRezY = 480: FullScreen Off
+    If ForcedWindowed = 1 Then ScreenRezX = 800: ScreenRezY = 600: FullScreen Off
+    Localize
     Print "Loading Assets"
     OSPROBE
     SwitchRender (DefaultRenderMode)
@@ -6476,6 +6835,12 @@ Sub ErrorHandler
             CENTERPRINT "Out of DATA, The READ statement has read past the end of a DATA block."
             CENTERPRINT " Use RESTORE to change the current data item if necessary."
             CENTERPRINT ""
+            CONTPROMPT
+        Case 5
+            CENTERPRINT "A function was called with invalid parameters, in the wrong graphics mode"
+            CENTERPRINT "or otherwise in an illegal fashion. Illegal Function gives some suggestions."
+            CENTERPRINT " "
+            CENTERPRINT "Basically the developers did something they shouldn't have"
             CONTPROMPT
 
         Case 9
@@ -6759,4 +7124,4 @@ Function Perlin (x As Single, y As Single, z As Single, seed As Integer64) 'i di
     Perlin = r
 End Function
 
-'$include:'Assets\Sources\OSprobe.bm'
+'$Include:'Assets\Sources\OSprobe.bm'

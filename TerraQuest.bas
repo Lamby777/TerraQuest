@@ -1,4 +1,5 @@
 $NoPrefix
+'$Dynamic
 Rem $Debug
 Option Explicit
 On Error GoTo ERRORHANDLE
@@ -21,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240415A"
-Game.Version = "B1.3-240415A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240416A"
+Game.Version = "B1.3-240416A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -53,6 +54,8 @@ Dim Shared Game.Language As String
 Dim Shared TextureSize As Unsigned Byte
 
 Dim Shared Dedication As String
+
+
 
 'Network Fuckery Variables and Types
 Dim Shared Network.PrimaryHost 'variable for telling the client whether we are the primary host, should not change at all during game session
@@ -139,6 +142,7 @@ Do
     Limit 60
     Display
     Cls
+    If KeyHit <> 0 Then Exit Do
 Loop Until 255 - (DedicateLimit - (60 * 5)) <= -32
 Color RGBA(255, 255, 255, 255)
 
@@ -622,6 +626,7 @@ Sub ScreenShot
             Exit Select
         Case 2 'save that bitch
             SSName = Date$ + "_" + Time$ 'Generate screenshot name
+            If Game.HostOS = "Windows" Then SSName = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer)))) 'WiNdOwS FiX   use a better os if this upsets you
             SaveImage SSName, , "PNG" ' save screenshot
             If DirExists("Assets\ScreenShots\") = 0 Then MkDir "Assets\ScreenShots\" 'check if screenshots directory exists
             Select Case Game.HostOS 'move screenshot to the screenshots directory, because path in filename doesnt work
@@ -1616,19 +1621,26 @@ Sub RandomUpdates
     Static TileCountDown As Long
     Static WaterSpreadCountDown As Long
     Static LongTimeOut As Long
-    Static PriorCheck(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Integer
+    ReDim Preserve PriorCheck(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Integer
     Static TileTimeOut
     Dim i, ii
     Dim Rx, Ry As Integer
 
-    ' Const EggplantLTB = 0.35
+    'NOTICE OF CAUTION TO ALL HUMBLE ADVENTURERS:
+    'The code in this section are cursed, there is a mighty bug at foot, one that causes arrays to have improper ranges
+    'many an hour hath been wasted attempting to make this mess work in a complete, fair, and just mannor
+    'alas tis all in vain, a fruitless endevor that hath claimed the free hours ones corprate overlords every so benevolently grant forth.
+    'Save ye self, be weary when entering these dark lands, do only what ye must.
+
+
+
     'weather
     If WeatherCountDown < 0 Then
         WeatherCountDown = Int(Rnd * 1000000)
         Select Case Int(Rnd * 100)
-            Case Is > 50
+            Case Is > 25
                 PrecipitationLevel = 0
-            Case Is < 25
+            Case Is < 12
                 PrecipitationLevel = 1
             Case Else
                 PrecipitationLevel = 2
@@ -1638,9 +1650,9 @@ Sub RandomUpdates
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
     'tile updates
-    GoTo skipthisshit
+    '    GoTo skipthisshit
     Do
-        Rx = Int(Rnd * Exp.MapSizeX) + 1
+        Rx = Int(Rnd * Exp.MapSizeX) + 1 'posibly the only 2 lines necessary, the rest of this is cursed up to @skipthisshit
         Ry = Int(Rnd * Exp.MapSizeY) + 1
         If TileTimeOut = 15 Then
             For ii = 0 To Exp.MapSizeX + 1
@@ -1652,7 +1664,9 @@ Sub RandomUpdates
         End If
         TileTimeOut = TileTimeOut + 1
 
-    Loop Until PriorCheck(Rx, Ry) = 0 'BRUH. WHY THE F U C K IS THIS CAUSING A SUBSCRIPT OUT OF RANGE, IT IS DEFINATELY WITHIN RANGE
+
+        If PriorCheck(Rx, Ry) = 0 Then Exit Do
+    Loop 'BRUH. WHY THE F U C K IS THIS CAUSING A SUBSCRIPT OUT OF RANGE, IT IS DEFINATELY WITHIN RANGE
     PriorCheck(Rx, Ry) = 1
     TileTimeOut = 0
     skipthisshit:
@@ -1683,6 +1697,11 @@ Sub RandomUpdates
                 If LocalTemperature(Rx, Ry) > 0.3 Then GroundTile(Rx, Ry) = 2
         End Select
         LongTimeOut = 500
+    End If
+
+    'semilong tile updates
+    If LongTimeOut < 250 Then
+
     End If
 
     'quick tile updates
@@ -1878,7 +1897,6 @@ Sub Precip2
     Static RainDelay As Byte
     Static SnowFrame As Byte
     Static RainFrame As Byte
-    Static LocalTempGrab(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
     Static TempGrabDelay
 
     Dim i, ii
@@ -1887,36 +1905,32 @@ Sub Precip2
     TempGrabDelay = TempGrabDelay + 1
     If TempGrabDelay > 20 Then TempGrabDelay = 0
 
-    Select Case PrecipitationLevel
+    Select EveryCase PrecipitationLevel
         Case 0
             SnowDelay = 0
             RainDelay = 0
             SnowFrame = 0
             RainFrame = 0
         Case 1, 2
+            'playsound sounds.rain
             If SnowDelay > 13 Then SnowFrame = SnowFrame + 1: SnowDelay = 0
             If RainDelay > 3 Then RainFrame = RainFrame + 1: RainDelay = 0
+        Case 2
+            'if int(rnd*100)<2 then playsound sounds.thunder
     End Select
     If RainFrame > 3 Then RainFrame = 0: RainDelay = 0
     If SnowFrame > 3 Then SnowFrame = 0: SnowDelay = 0
     If PrecipitationLevel > 0 Then
         For i = 1 To Exp.MapSizeY
             For ii = 1 To Exp.MapSizeX
-                GoTo skipthisfuckinshittoo
-                If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = NaturalTemperature(ii, i)
-
-                '  GoTo skipthisfuckinshittoo
                 If VisibleCheck(ii, i) = 1 Then
-                    If LocalTempGrab(ii, i) < 0.34 Then
+                    If NaturalTemperature(ii, i) < 0.34 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(TextureSize + ((TextureSize + 1) * SnowFrame), TextureSize)
                     End If
-                    If LocalTempGrab(ii, i) > 0.34 And LocalTempGrab(ii, i) < 0.90 Then
+                    If NaturalTemperature(ii, i) > 0.34 And NaturalTemperature(ii, i) < 0.90 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(TextureSize + ((TextureSize + 1) * RainFrame), TextureSize + (TextureSize + 1))
-
                     End If
-
                 End If
-                skipthisfuckinshittoo:
             Next
         Next
     End If

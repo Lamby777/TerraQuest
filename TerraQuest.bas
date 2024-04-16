@@ -21,8 +21,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240414A"
-Game.Version = "B1.3-240413A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240415A"
+Game.Version = "B1.3-240415A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -52,6 +52,8 @@ Dim Shared Game.Language As String
 
 Dim Shared TextureSize As Unsigned Byte
 
+Dim Shared Dedication As String
+
 'Network Fuckery Variables and Types
 Dim Shared Network.PrimaryHost 'variable for telling the client whether we are the primary host, should not change at all during game session
 Dim Shared Network.HostMode 'variable for telling the client whether we are map host or not, can change dynamically through gameplay
@@ -62,6 +64,7 @@ ReDim Shared Network.PlayerDataArray(10, 5) '(playerID,Value)
 
 Game.Language = "English"
 
+Dedication = "For Donald & Marie, Thank you for giving me the creativity I needed to make this."
 
 
 TextureSize = 15
@@ -109,9 +112,39 @@ Dim Shared Title.MapSize As Unsigned Byte
 Title.MapSize = 50
 
 
+'A little side note about this section of the code with how qb64 works
+'
+'The title sequence and probably even the title screen use classic line lable procedural code
+'while the rest of the game uses functional programming, i dont really care at this point
+'if it looks good and it works and it is readable then i dont see the problem, deal with it
+
+'Begin
+StartPreInit:
+INITIALIZE
+StartPostInit:
+
+'Roll Studio Splash (Whenever i start maxaroth studios/aetherian games
+
+'Roll Dedication
+Dim DedicateLimit
+Const DedicateTimer = 3
+Do
+    DedicateLimit = DedicateLimit + 1
+    If DedicateLimit > 60 * DedicateTimer Then
+        DedicateLimit = DedicateLimit + 1
+        Color RGBA(255, 255, 255, 255 - (DedicateLimit - (60 * DedicateTimer)))
+    End If
+    Locate ScreenRezY / 16 / 2, 1
+    CENTERPRINT Dedication
+    Limit 60
+    Display
+    Cls
+Loop Until 255 - (DedicateLimit - (60 * 5)) <= -32
+Color RGBA(255, 255, 255, 255)
+
+
 
 temptitle:
-INITIALIZE
 'If Exp.Active <> 1 Then GoTo oldtitle
 If Command$ = "oldtitle" GoTo oldtitle
 mainmenu:
@@ -130,6 +163,8 @@ Do
             GoTo StartMultiplayer
         Case 3
             GoTo Settings
+        Case 4
+            System
     End Select
     Limit 60
 Loop
@@ -305,7 +340,7 @@ Error 102
 ERRORHANDLE:
 ErrorHandler
 Resume Next
-
+'idk why this is outside of anything, but it works and i dont remember why, dont touch it unless it breaks
 DisplayOrder GLRender , Hardware , Software
 game:
 KeyClear
@@ -1181,6 +1216,15 @@ Function Title_Go_Back$
     End Select
 End Function
 
+Function Title_Exit$
+    Select Case Game.Language
+        Case "English"
+            Title_Exit = "Exit to Desktop"
+        Case "Spanish"
+            Title_Exit = "Salir al Escritorio"
+    End Select
+End Function
+
 
 Sub Textbox (Diag, Opt)
     Dim BoxW
@@ -1235,6 +1279,8 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(2, Opt) + Title_multiPlayer
             Print
             CENTERPRINT DiagSel(3, Opt) + Title_Settings
+            Print
+            CENTERPRINT DiagSel(4, Opt) + Title_Exit
 
 
         Case 1
@@ -1448,7 +1494,7 @@ Function Menu (MenuNum)
             'Draw Options buttons
 
             Textbox 0, HighlightedOption
-            OptCount = 3
+            OptCount = 4
         Case 1 'settings
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"

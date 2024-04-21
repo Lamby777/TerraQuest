@@ -22,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240416A"
-Game.Version = "B1.3-240416A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240421A"
+Game.Version = "B1.3-240421A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -42,6 +42,7 @@ Dim Shared Flag.FullBright As Unsigned Bit
 Dim Shared Flag.CommandFeedback
 Dim Shared Flag.ChatOpen
 Dim Shared Flag.isStrafing As Unsigned Bit
+Dim Shared Flag.ExitToTitle As Unsigned Bit
 
 Dim Shared Exp.Active As Byte
 Dim Shared Exp.MapSizeX As Integer
@@ -67,7 +68,7 @@ ReDim Shared Network.PlayerDataArray(10, 5) '(playerID,Value)
 
 Game.Language = "English"
 
-Dedication = "For Donald & Marie, Thank you for giving me the creativity I needed to make this."
+Dedication = "For Donald & Marie, Thank you for giving me the creativity to make this."
 
 
 TextureSize = 15
@@ -80,7 +81,7 @@ Flag.CommandFeedback = 1
 Select Case LCase$(Command$)
     Case "experimental"
         Print Game.Title + " has been launched with experimental mode enabled."
-        Print "Please select which active experiment number you wish to enable"
+        Print "Please enter experimental feature id to enable it (NOTE: This will disable certain features)"
         Input "", Exp.Active
     Case "windowed"
         ForcedWindowed = 1
@@ -152,6 +153,7 @@ temptitle:
 'If Exp.Active <> 1 Then GoTo oldtitle
 If Command$ = "oldtitle" GoTo oldtitle
 mainmenu:
+
 Dim Selected
 Do
 
@@ -170,7 +172,7 @@ Do
         Case 4
             System
     End Select
-    Limit 60
+    Limit 30
 Loop
 Error 102
 
@@ -194,6 +196,7 @@ Do
         Case 3
             GoTo mainmenu
     End Select
+    Limit 30
 Loop
 
 loadworldmenu:
@@ -279,6 +282,7 @@ Do
         Case 7
             GoTo mainmenu
     End Select
+    Limit 30
 Loop
 
 Controls:
@@ -292,6 +296,7 @@ Do
         Case 17
             GoTo Settings
     End Select
+    Limit 30
 Loop
 controls2:
 Do
@@ -302,6 +307,7 @@ Do
         Case 13
             GoTo Controls
     End Select
+    Limit 30
 Loop
 
 oldtitle:
@@ -433,6 +439,9 @@ Do
         Flag.OpenCommand = 2
     End If
     If Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
+
+    'check if exit to tile flag is enabled
+    If Flag.ExitToTitle = 1 Then Flag.ExitToTitle = 0: GoTo mainmenu
 
     Cls
 Loop
@@ -1397,26 +1406,46 @@ End Sub
 
 Sub PauseMenu
     Dim Selected
+
     While InKey$ <> "": Wend
     '    If Flag.RenderOverride = 0 Then SwitchRender (0)
+    Locate ScreenRezY / 16 - 7, 1
+    PrintMode KeepBackground
+    Color RGBA(255, 255, 255, 255)
+    CENTERPRINT "The game is currently paused."
+    Print
+    CENTERPRINT "<esc> To resume"
+    Print
+    CENTERPRINT "<q> To save & exit"
+    Print
+    CENTERPRINT "<x> To exit without saving"
+    Print
+    Print
+    CENTERPRINT "General Info"
+    CENTERPRINT "Maps are automatically saved upon screen transitions"
+    CENTERPRINT "Standing near ground items and opening you inventory facing them interacts with them"
+    CENTERPRINT "Ground items look like blue puddles (WIP)"
+    CENTERPRINT "A tool handle must be made to craft tools"
+    CENTERPRINT "The temperature will change with the seasons"
+    Display
     Do
 
 
         '      Selected = Menu(2)
-        Select Case Selected
-            Case 0
-            Case 1
 
-            Case 3
-
-        End Select
-
-
-        If KeyHit = 27 Then Exit Do
+        Selected = KeyHit
+        If Selected = 27 Then Exit Do
+        If Selected = 113 Then Locate ScreenRezY / 16, 1: CENTERPRINT "Saving and Exiting, Goodbye!": ExitGame (1)
+        If Selected = 120 Then Locate ScreenRezY / 16, 1: CENTERPRINT "Exiting without Saving, Goodbye!": ExitGame (0)
+        Limit 60
     Loop
     '   SwitchRender (RenderMode)
 End Sub
+Sub ExitGame (save)
+    If save = 1 Then SAVEMAP
+    Flag.ExitToTitle = 1
 
+End Sub
 
 Function DiagSel$ (Cur, Hil)
     If Cur = Hil Then DiagSel = "" Else DiagSel = " "
@@ -1486,7 +1515,7 @@ Function Menu (MenuNum)
     End If
     'imma be honest it got lazy, im high af
     Dim MenuImageLong As Long
-    MenuImageLong = LoadImage("Assets\Sprites\TitleScreen\titlescreen1.png", 32)
+    '   MenuImageLong = LoadImage("Assets\Sprites\TitleScreen\titlescreen1.png", 32)
     '  If MenuImageLong <> -1 Then PutImage (0, 0), MenuImageLong, , (0, 0)
 
     Select Case MenuNum
@@ -1707,10 +1736,39 @@ Sub RandomUpdates
     'quick tile updates
 
     Select Case GroundTile(Rx, Ry)
-        Case 13
+        Case 13 'water
             If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
-        Case 14
-            If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
+        Case 14 'ice
+            If LocalTemperature(Rx, Ry) > 0.4 Then GroundTile(Rx, Ry) = 13
+        Case 47, 46 'snow and drifts
+            If LocalTemperature(Rx, Ry) > 0.4 Then
+                Select Case Int(Rnd * 100)
+                    Case Is > 10
+                        GroundTile(Rx, Ry) = 2
+                    Case Is < 11
+                        GroundTile(Rx, Ry) = 4 'replace with mud
+                End Select
+            End If
+        Case 2, 3, 4 'dirt grass and cut grass
+            If LocalTemperature(Rx, Ry) < 0.30 And PrecipitationLevel > 0 Then
+                Select Case Int(Rnd * 100)
+                    Case Is > 25
+                        GroundTile(Rx, Ry) = 47
+                    Case Is < 26
+                        GroundTile(Rx, Ry) = 46
+                End Select '
+            End If
+    End Select
+    Select Case WallTile(Rx, Ry)
+
+        Case 5 'bush
+            If LocalTemperature(Rx, Ry) < 0.30 And PrecipitationLevel > 0 Then
+                WallTile(Rx, Ry) = 45
+            End If
+        Case 45
+            If LocalTemperature(Rx, Ry) > 0.4 Then
+                WallTile(Rx, Ry) = 5
+            End If
     End Select
 
 
@@ -1750,6 +1808,7 @@ Function LocalTemperature (Tx, Ty)
 End Function
 
 Function NaturalTemperature (tx, ty)
+
     NaturalTemperature = BiomeTemperature(tx, ty) + SeasonalOffset + TODoffset
 End Function
 Function TODoffset
@@ -1899,11 +1958,22 @@ Sub Precip2
     Static RainFrame As Byte
     Static TempGrabDelay
 
+    Static DelayGrab()
+
+    ReDim Preserve DelayGrab(Exp.MapSizeX, Exp.MapSizeY)
+
     Dim i, ii
     SnowDelay = SnowDelay + 1
     RainDelay = RainDelay + 1
     TempGrabDelay = TempGrabDelay + 1
-    If TempGrabDelay > 20 Then TempGrabDelay = 0
+    If TempGrabDelay > 20 Then
+        TempGrabDelay = 0
+        For i = 1 To Exp.MapSizeX
+            For ii = 1 To Exp.MapSizeY
+                DelayGrab(i, ii) = NaturalTemperature(i, ii)
+            Next
+        Next
+    End If
 
     Select EveryCase PrecipitationLevel
         Case 0
@@ -1924,10 +1994,10 @@ Sub Precip2
         For i = 1 To Exp.MapSizeY
             For ii = 1 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
-                    If NaturalTemperature(ii, i) < 0.34 Then
+                    If DelayGrab(ii, i) < 0.34 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(TextureSize + ((TextureSize + 1) * SnowFrame), TextureSize)
                     End If
-                    If NaturalTemperature(ii, i) > 0.34 And NaturalTemperature(ii, i) < 0.90 Then
+                    If DelayGrab(ii, i) > 0.34 And DelayGrab(ii, i) < 0.90 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(TextureSize + ((TextureSize + 1) * RainFrame), TextureSize + (TextureSize + 1))
                     End If
                 End If
@@ -4613,6 +4683,7 @@ Sub FadeIn
 
 End Sub
 
+
 Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
     Static TotalDelay
@@ -5974,7 +6045,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
                 entity(i, 4) = Player.x
                 entity(i, 5) = Player.y
             Next
-            If Feedback = 1 Then SendChat Chr$(21) + "COME HITHER"
+            If Feedback = 1 Then SendChat Chr$(21) + "Teleported all living entities to your location"
         Case "/effect"
             For i = 0 To MaxEffects
                 If EffectArray(i, 0, 0) = 0 Then
@@ -6015,6 +6086,8 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             End Select
             If Feedback = 1 Then SendChat Chr$(21) + Language_has_been_updated
 
+
+        Case "/frametarget", "/fps"
             '--------------------------------
         Case Else
             SendChat Chr$(21) + Command_not_found_1 + Chr$(34) + CommandBase + Chr$(34) + Command_not_found_2

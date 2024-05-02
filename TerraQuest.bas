@@ -22,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240421A"
-Game.Version = "B1.3-240421A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240502A"
+Game.Version = "B1.3-240502A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -39,10 +39,11 @@ Dim Shared ScreenShake.Duration As Integer
 Dim Shared ScreenShake.Remaining As Integer
 
 Dim Shared Flag.FullBright As Unsigned Bit
-Dim Shared Flag.CommandFeedback
+Dim Shared Flag.CommandFeedback As Unsigned Bit
 Dim Shared Flag.ChatOpen
 Dim Shared Flag.isStrafing As Unsigned Bit
 Dim Shared Flag.ExitToTitle As Unsigned Bit
+Dim Shared Flag.TransparentCeil As Unsigned Bit
 
 Dim Shared Exp.Active As Byte
 Dim Shared Exp.MapSizeX As Integer
@@ -53,6 +54,7 @@ Dim Shared Game.WorldCount
 Dim Shared Game.Language As String
 
 Dim Shared TextureSize As Unsigned Byte
+dim shared TextureScale as unsigned byte
 
 Dim Shared Dedication As String
 
@@ -375,10 +377,12 @@ Do
     If CurrentRefresh <= 0 Then SetBG
     If CurrentRefresh <= 0 Then SetMap
     If CurrentRefresh <= 0 Then CastShadow
-
     'Calculate player and entity movements
     Move
     If CurrentRefresh <= 0 Then RenderEntities (1)
+
+    'draw the ceiling layer (seperate from SetMap so ceiling tiles draw over the player
+    If CurrentRefresh <= 0 Then SetMapCeil
     Entities (0)
     Entities (1)
 
@@ -1412,6 +1416,7 @@ Sub PauseMenu
     Locate ScreenRezY / 16 - 7, 1
     PrintMode KeepBackground
     Color RGBA(255, 255, 255, 255)
+    PrintMode FillBackground
     CENTERPRINT "The game is currently paused."
     Print
     CENTERPRINT "<esc> To resume"
@@ -1518,10 +1523,15 @@ Function Menu (MenuNum)
     '   MenuImageLong = LoadImage("Assets\Sprites\TitleScreen\titlescreen1.png", 32)
     '  If MenuImageLong <> -1 Then PutImage (0, 0), MenuImageLong, , (0, 0)
 
+    If MenuNum <= 6 Then
+        Color RGB(255, 255, 0)
+        ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+        Color RGB(255, 255, 255)
+    End If
+
     Select Case MenuNum
         Case 0 ' Title Screen
             'put title screen icon
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             'put splash text
@@ -1531,7 +1541,7 @@ Function Menu (MenuNum)
             OptCount = 4
         Case 1 'settings
             'put title screen icon
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            '   ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -1543,7 +1553,7 @@ Function Menu (MenuNum)
             OptCount = 7
         Case 2 'create or load
             'put title screen icon
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            '  ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -1554,7 +1564,7 @@ Function Menu (MenuNum)
             Textbox 2, HighlightedOption
             OptCount = 3
         Case 3 'new world
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            ' ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -1562,7 +1572,7 @@ Function Menu (MenuNum)
             Textbox 3, HighlightedOption
             OptCount = 6
         Case 4 'Controls
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            '       ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -1570,7 +1580,7 @@ Function Menu (MenuNum)
             Textbox 4, HighlightedOption
             OptCount = 17
         Case 5 'Controls 2
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            '     ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -1578,7 +1588,7 @@ Function Menu (MenuNum)
             Textbox 5, HighlightedOption
             OptCount = 13
         Case 6 'Start Multiplayer
-            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            '     ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
@@ -5239,6 +5249,12 @@ Sub DEV
         If Flag.FullRender = 1 Then ENDPRINT "Render Optimizations Disabled"
         If Flag.IsBloodmoon = 1 Then ENDPRINT "Blood Moon is Active"
         If Flag.FullBright = 1 Then ENDPRINT "Fullbright is Active"
+        If Flag.CommandFeedback = 0 Then ENDPRINT "Command Feedback is Disabled"
+        If Flag.ChatOpen = 1 Then ENDPRINT "Chat is Open, Some keybinds disabled"
+        If Flag.isStrafing = 1 Then ENDPRINT "Player is Strafing"
+        If Flag.ExitToTitle = 1 Then ENDPRINT "Exiting to title, Goodbye Friend"
+        If Flag.TransparentCeil = 1 Then ENDPRINT "Ceiling Tile Flashing is Disabled"
+
 
 
         Locate 1, 1
@@ -5980,6 +5996,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             If Feedback = 1 Then SendChat Chr$(21) + "Fullbright Toggled"
         Case "/feedback"
             Flag.CommandFeedback = Flag.CommandFeedback + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Command Feedback Toggled"
         Case "/spreadlight", "/spl"
             SpreadLight (1)
             If Val(Parameters(0)) = 1 Then SpreadHeat
@@ -6088,6 +6105,9 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
 
 
         Case "/frametarget", "/fps"
+
+        Case "/ceiltrans", "/ct"
+            Flag.TransparentCeil = Flag.TransparentCeil + 1
             '--------------------------------
         Case Else
             SendChat Chr$(21) + Command_not_found_1 + Chr$(34) + CommandBase + Chr$(34) + Command_not_found_2
@@ -6801,6 +6821,7 @@ End Sub
 
 
 Sub ErrorHandler
+    Dim ParsedError
     AutoDisplay
     Cls
     PlaySound Sounds.error
@@ -6809,8 +6830,9 @@ Sub ErrorHandler
     Locate 1, 1
     CENTERPRINT "CDF ERROR HANDLER"
     Print "Error Code:"; Err
-    Locate 2, 1
+    If ScreenRezX > 0 Then Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
+    ' Print ScreenRezX, ScreenRezY
     '  If Exp.Active <> 0 Then
     Print "Active Experimental Mode:" + Trim$(Str$(Exp.Active))
     Print "Map Size: " + Trim$(Str$(Exp.MapSizeX)) + ","; Trim$(Str$(Exp.MapSizeY)) + " PL:" + Trim$(Str$(Exp.ParLen))
@@ -6820,7 +6842,15 @@ Sub ErrorHandler
     '    Print "--------------------------------------------------------------------------------"
     Print
     '       PRINT "--------------------------------------------------------------------------------"
-    Select Case Err
+
+    'Error Pre Parser
+    'This section looks at specific error codes to determin further information about the error
+    ' such as a specific error occuring on a specific line, resulting in more detailed error information
+
+    ParsedError = Err
+    If Err = 9 And ErrorLine = 22 Then ParsedError = 106
+
+    Select Case ParsedError
         Case 100
             CENTERPRINT "Assets folder is incomplete, this error can be triggered by one or more of the"
             CENTERPRINT "following conditions:"
@@ -6906,6 +6936,11 @@ Sub ErrorHandler
             Do
                 If KeyDown(113) Then System
             Loop
+        Case 106
+            CENTERPRINT "Number of Splash text entries exceeds the entry limit."
+            CENTERPRINT ""
+            CENTERPRINT "Either remove some entries or increase the limit."
+            CONTPROMPT
 
 
         Case 2
@@ -7017,13 +7052,52 @@ Sub SetMap
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + TextureSize, TileIndex(WallTile(ii, i), 2) + TextureSize)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + TextureSize, TileIndex(CeilingTile(ii, i), 2) + TextureSize)
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
             End If
         Next
     Next
 End Sub
 
+Sub SetMapCeil
+    Dim i, ii As Integer
+    Dim Proxy
+    Static dimmer
+    Static counter As Unsigned Byte
+    Static LagReducinator As Unsigned Bit
+    counter = counter + 1
+    '    Print counter, dimmer, dimmer Mod 2
+    If counter = Int(256 / 6) Then dimmer = dimmer + 1: counter = 0
+    If Flag.TransparentCeil = 1 Then dimmer = 1
+    'inhebriated comment time
+    'im drunk and probably a little high, WHY TF did i ever think this was gonna work, this fucking function gets called every game loop
+    'this dimmer recursion is absolutely useless
+
+    'update i hijacked the counter dimmer thing to do a flashing display, fuck you
+    For ii = 1 To Exp.MapSizeX
+        For i = 1 To Exp.MapSizeY
+            Proxy = 0
+            If i + 3 > PlayerTileY And i - 3 < PlayerTileY And ii + 3 > PlayerTileX And ii - 3 < PlayerTileX Then Proxy = 1:
+            ' If Proxy = 1 Then Print i, ii, "|", PlayerTileX, PlayerTileY, "|", Proxy
+            If VisibleCheck(ii, i) = 1 Then
+                '        If Flag.TransparentCeil = 1 Then
+                '            If LagReducinator = 0 And Proxy = 1 Then
+                '                SetAlpha 128, RGBA(0, 0, 0, 0), RGBA(255, 255, 255, 255)
+                '                LagReducinator = 1
+                '            End If
+                '            If LagReducinator = 1 And Proxy = 0 Then
+                '                SetAlpha 0, RGBA(0, 0, 0, 0), RGBA(255, 255, 255, 255)
+                '                LagReducinator = 0
+                '            End If
+                '        End If
+                If dimmer Mod 2 = 0 Then Proxy = 0 'this flashes the ceiling tiles above the player
+                If Proxy = 0 Then 'only display tile if far enough from player, or on a display cycle if enabled
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + TextureSize, TileIndex(CeilingTile(ii, i), 2) + TextureSize)
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
+                End If
+            End If
+
+        Next
+    Next
+End Sub
 Function VisibleCheck (TileX As Integer, TileY As Integer)
 
     VisibleCheck = 1

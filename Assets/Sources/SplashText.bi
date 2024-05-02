@@ -1,4 +1,4 @@
-Const SplashCount = 20
+Const SplashCount = 21
 Dim Shared As String Splash(SplashCount)
 Splash(0) = "Definitive"
 Splash(1) = "Water"
@@ -21,6 +21,7 @@ Splash(17) = "Novaflux"
 Splash(18) = "Cherry"
 Splash(19) = "Sour"
 Splash(20) = "Sweet"
+splash(21) = "60 FPS"
 
 
 

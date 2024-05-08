@@ -22,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240502A"
-Game.Version = "B1.3-240502A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240506A"
+Game.Version = "B1.3-240506A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -44,6 +44,13 @@ Dim Shared Flag.ChatOpen
 Dim Shared Flag.isStrafing As Unsigned Bit
 Dim Shared Flag.ExitToTitle As Unsigned Bit
 Dim Shared Flag.TransparentCeil As Unsigned Bit
+Dim Shared Flag.ErrorAutoResolve
+Dim Shared Flag.ErrorFeedback As Unsigned Bit
+
+Dim Shared TileCommand(4)
+Dim Shared TeleporterDestID(5) As Integer64
+
+Dim Shared ErrorCounter
 
 Dim Shared Exp.Active As Byte
 Dim Shared Exp.MapSizeX As Integer
@@ -54,7 +61,7 @@ Dim Shared Game.WorldCount
 Dim Shared Game.Language As String
 
 Dim Shared TextureSize As Unsigned Byte
-dim shared TextureScale as unsigned byte
+Dim Shared TextureScale As Unsigned Byte
 
 Dim Shared Dedication As String
 
@@ -72,7 +79,8 @@ Game.Language = "English"
 
 Dedication = "For Donald & Marie, Thank you for giving me the creativity to make this."
 
-
+Flag.ErrorAutoResolve = 5
+Flag.ErrorFeedback = 1
 TextureSize = 15
 Exp.MapSizeX = 40
 Exp.MapSizeY = 30
@@ -393,7 +401,7 @@ Do
     TileTickUpdates
     RandomUpdates
     DelayUpdates
-
+    'spreadlightd
     SpreadHeat
     Precip2
     If CurrentRefresh <= 0 Then SetLighting
@@ -426,26 +434,40 @@ Do
     'Grab keyboard input once in the loop here, and use that value everywhere else. this is to avoid overfishing the keyboard buffer
     KeyPressed = KeyHit
 
+    'Check if /tru is enabled and limit tickrate if not
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
+
+    'Keep track of current tick progression
     CurrentTick = CurrentTick + Settings.TickRate
+
+    'handle frameskip settings
     If Flag.ScreenRefreshSkip = 0 Then
         If CurrentRefresh <= 0 Then
             Display
+            ScreenShot 'after everthing has been displayed, now see if the user wants to take a screenshot
             CurrentRefresh = RefreshOpt
         Else
             CurrentRefresh = CurrentRefresh - 1
         End If
     End If
-    ScreenShot
     Flag.ScreenRefreshSkip = 0
+
+    'switch to software mode for legacy command input
     If Flag.OpenCommand = 1 Then
         DisplayOrder Hardware , Software
         Flag.OpenCommand = 2
+    ElseIf Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
     End If
-    If Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
 
     'check if exit to tile flag is enabled
     If Flag.ExitToTitle = 1 Then Flag.ExitToTitle = 0: GoTo mainmenu
+
+    'TimeOut error counter for autoerrorresolver
+    If Flag.ErrorAutoResolve > 0 Then
+        If CurrentTick Mod 60 = 0 Then
+            If ErrorCounter > 0 Then ErrorCounter = ErrorCounter - 1
+        End If
+    End If
 
     Cls
 Loop
@@ -599,18 +621,25 @@ Sub Playerchat
     If Flag.ChatOpen = 1 Then
         PrintMode FillBackground
         Color , RGBA(0, 0, 0, 128)
-        If KeyHit = 13 Then Flag.ChatOpen = 2: While InKey$ <> "": Wend
-        If KeyHit = 8 Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend
+        If KeyHit = 13 Then Flag.ChatOpen = 2: While InKey$ <> "": Wend 'enter
+        If KeyHit = 8 Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend 'backspace
+        If KeyHit = 27 Then Flag.ChatOpen = 0: ChatBuffer = "" 'escape
         CharBuffer = InKey$
-        If CharBuffer = Chr$(8) Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend
-        If CharBuffer <> Chr$(8) Then ChatBuffer = ChatBuffer + CharBuffer
-        Locate (ScreenRezY / 16) - 6, 1: Print "Chat: "; ChatBuffer
+        If CharBuffer = Chr$(8) Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend 'backspace
+        If CharBuffer = Chr$(27) Then Flag.ChatOpen = 0: ChatBuffer = "": CharBuffer = "" 'escape
+        If CharBuffer <> Chr$(8) Then ChatBuffer = ChatBuffer + CharBuffer 'anything else
+        Select Case TileCommand(2)
+            Case 57, 58, 59
+                Locate (ScreenRezY / 16) - 6, 1: Print "INES Console (Use :exit to stop interaction): "; ChatBuffer
+            Case Else
+                Locate (ScreenRezY / 16) - 6, 1: Print "Chat: "; ChatBuffer
+        End Select
         PrintMode KeepBackground
         Color , RGBA(0, 0, 0, 0)
     End If
 
     If Flag.ChatOpen = 2 Then
-        SendChat ChatBuffer
+        If ChatBuffer <> "" Then SendChat ChatBuffer
         Flag.ChatOpen = 0
         ChatBuffer = ""
     End If
@@ -1908,12 +1937,71 @@ Sub SpreadHeat2 (updates)
     End If
 End Sub
 
-Sub spreadlightd (fuck)
+Sub spreadlightd
+    Dim i, j, k
+    Dim accumulator
+    Dim normalizer
+    Dim jj, kk, j0, k0
+
+    Dim As Double ImgKernel(-1 To 1, -1 To 1)
+    ImgKernel(1, -1) = 7 '  1 / Sqr(2)
+    ImgKernel(0, -1) = 10 ' 1
+    ImgKernel(-1, -1) = 7 ' 1 / Sqr(2)
+    ImgKernel(1, 0) = 10 '  1
+    ImgKernel(0, 0) = 0 '   0
+    ImgKernel(-1, 0) = 10 ' 1
+    ImgKernel(1, 1) = 7 '   1 / Sqr(2)
+    ImgKernel(0, 1) = 10 '  1
+    ImgKernel(-1, 1) = 7 '  1 / Sqr(2)
+
+
+
+    Dim ScratchArray(Exp.MapSizeX, Exp.MapSizeY)
+    For i = 1 To 12
+        For j = 1 To Exp.MapSizeX
+            For k = 1 To Exp.MapSizeY
+                If (TileData(j, k, 8) = 0) Then
+
+                    accumulator = 0
+                    normalizer = 0
+                    For jj = -1 To 1
+                        For kk = -1 To 1
+                            j0 = j + jj
+                            k0 = k + kk
+                            If (j0 < 1) Then j0 = 1
+                            If (k0 < 1) Then k0 = 1
+                            If (j0 > Exp.MapSizeX) Then j0 = Exp.MapSizeX
+                            If (k0 > Exp.MapSizeY) Then k0 = Exp.MapSizeY
+                            accumulator = accumulator + (TileData(j0, k0, 8) / 12) * ImgKernel(jj, kk) '* TileData(j, k, 2)
+                            normalizer = normalizer + ImgKernel(jj, kk)
+                            '    accumulator=
+                        Next
+                    Next
+                    ScratchArray(j, k) = Int((accumulator / normalizer) * 12)
+                    '     ScratchArray(j, k) = 6
+                End If
+
+                If KeyDown(112) Then
+                    DebugPrint Str$(TileData(j, k, 8)) + Str$(ScratchArray(j, k)) + Str$((accumulator)) + Str$(normalizer) + Str$(j) + Str$(k) + Str$(accumulator / normalizer)
+                    Sleep
+                End If
+            Next
+        Next
+        For j = 1 To Exp.MapSizeX
+            For k = 1 To Exp.MapSizeY
+                If TileData(j, k, 8) > 0 Then
+                    LocalLightLevel(j, k) = ScratchArray(j, k)
+                End If
+            Next
+        Next
+    Next
+
 
 End Sub
 
-Sub SpreadLight (updates)
 
+Sub SpreadLight (updates)
+    'Exit Sub
     Dim As Integer i, ii
     For i = 1 To Exp.MapSizeY
         For ii = 1 To Exp.MapSizeX
@@ -2047,13 +2135,244 @@ Sub PrecipOverlay
 
 End Sub
 
+Sub TileInteract (TileX, TileY)
+    Dim TileID
+    Dim TeleLinkCheck(5) As Integer64
+    TileID = WallTile(TileX, TileY)
+    TileCommand(0) = TileX
+    TileCommand(1) = TileY
+    TileCommand(2) = TileID
+    TileCommand(4) = CurrentDimension
+    If TileCommand(3) = 0 Then
+        Select EveryCase TileID
+            Case 57, 58, 59 'load teleporter link file
+                If DirExists("Assets\Worlds\" + WorldName + "\TeleportLinks\") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\TeleportLinks\"
+                If FileExists("Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1)))) Then
+                    Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
+                    Get #1, 1, TeleporterDestID(0) 'mapx
+                    Get #1, 2, TeleporterDestID(1) 'mapy
+                    Get #1, 3, TeleporterDestID(2) 'tilex
+                    Get #1, 4, TeleporterDestID(3) 'tiley
+                    Get #1, 5, TeleporterDestID(4) 'link status
+                    Get #1, 6, TeleporterDestID(5) 'dimension
+                    Close #1
+                    DebugPrint "DestID"
+                    Print TeleporterDestID(0)
+                    Print TeleporterDestID(1)
+                    Print TeleporterDestID(2)
+                    Print TeleporterDestID(3)
+                    Print TeleporterDestID(4)
+                    Print TeleporterDestID(5)
+                    Display
+                    Sleep
+                    '   If TeleporterDestID(4) > 1 Then TeleporterDestID(4) = 1
+                Else
+                    TeleporterDestID(4) = 0
+                    Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
+                    Put #1, 5, TeleporterDestID(4) 'link status
+                    Close #1
+                End If
+                DebugPrint "Dest Link Status" + Str$(TeleporterDestID(4)): Sleep
+                If TeleporterDestID(4) = 1 Then 'check if matching teleporter is also paired
+                    Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))) As #1
+                    Get #1, 1, TeleLinkCheck(0) 'mapx
+                    Get #1, 2, TeleLinkCheck(1) 'mapy
+                    Get #1, 3, TeleLinkCheck(2) 'tilex
+                    Get #1, 4, TeleLinkCheck(3) 'tiley
+                    Get #1, 5, TeleLinkCheck(4) 'link status
+                    Get #1, 6, TeleLinkCheck(5) 'dimension
+
+                    If TeleLinkCheck(0) = SavedMapX And TeleLinkCheck(1) = SavedMapY And TeleLinkCheck(2) = TileCommand(0) And TeleLinkCheck(3) = TileCommand(1) And TeleLinkCheck(4) = 1 And TeleLinkCheck(5) = CurrentDimension Then TeleporterDestID(4) = 1 Else TeleporterDestID(4) = 0
+                    DebugPrint "Test"
+                    Print TeleLinkCheck(0)
+                    Print SavedMapX
+                    Print TeleLinkCheck(1)
+                    Print SavedMapY
+                    Print TeleLinkCheck(2)
+                    Print TileCommand(0)
+                    Print TeleLinkCheck(3)
+                    Print TileCommand(1)
+                    Print TeleLinkCheck(4)
+                    Print 1
+                    Print TeleLinkCheck(5)
+                    Print CurrentDimension
+                    Display
+                    Sleep
+                    Close #1
+                End If
+                DebugPrint Str$(TeleporterDestID(4)): Sleep
+                If Virus.Status > 0 Then If TeleporterDestID(4) = 1 Then WallTile(TileCommand(0), TileCommand(1)) = 59 Else WallTile(TileCommand(0), TileCommand(1)) = 58
+
+                SendChat Chr$(21) + "ARN-INES Management Console"
+                SendChat Chr$(21) + "EID: " + Trim$(Str$(SavedMapX)) + ":" + Trim$(Str$(SavedMapY)) + ":" + Trim$(Str$(CurrentDimension)) + ":" + Trim$(Str$(TileCommand(0))) + ":" + Trim$(Str$(TileCommand(1)))
+                If TeleporterDestID(4) = 0 Then SendChat Chr$(21) + "Linked EID: Unlinked"
+                If TeleporterDestID(4) = 1 Then SendChat Chr$(21) + "Linked EID: " + Trim$(Str$(TeleporterDestID(0))) + ":" + Trim$(Str$(TeleporterDestID(1))) + ":" + Trim$(Str$(TeleporterDestID(5))) + ":" + Trim$(Str$(TeleporterDestID(2))) + ":" + Trim$(Str$(TeleporterDestID(3)))
+                Select Case Virus.Status
+                    Case 0
+                        SendChat Chr$(21) + "ARN Network Status: Lock-Down Protocol Active"
+                    Case Is > 0
+                        SendChat Chr$(21) + "ARN Network Status: Active"
+                End Select
+                If TeleporterDestID(4) = 1 And Virus.Status > 0 Then 'activate pad
+                    Select Case WallTile(TileCommand(0) + 1, TileCommand(1))
+                        Case 64
+                            SendChat Chr$(21) + "Pad is Discharged, Install Aetherian Energy Sphere"
+                        Case 65
+                            SendChat Chr$(21) + "Pad is Ready, Step onto pad to teleport"
+                            WallTile(TileCommand(0) + 1, TileCommand(1)) = 66
+
+                        Case Else
+                            SendChat Chr$(21) + "Pad could not be located"
+                    End Select
+                End If
+
+
+
+                SendChat Chr$(21) + ""
+                SendChat Chr$(21) + "Valid commands are:"
+                SendChat Chr$(21) + ":link [EID]"
+                SendChat Chr$(21) + ":unlink"
+                SendChat Chr$(21) + ":security"
+                SendChat Chr$(21) + ":exit"
+                SendChat Chr$(21) + ""
+                SendChat Chr$(21) + "READY"
+                TileCommand(3) = 1 'this makes sure this only runs once per interaction
+        End Select
+    End If
+End Sub
+
+Sub TeleportMapChange
+    Dim i
+    WallTile(TileCommand(0) + 1, TileCommand(1)) = 65
+    For i = 0 To 4
+        TileCommand(i) = 0
+    Next
+    SAVEMAP
+    ChangeDimension TeleporterDestID(5)
+    SavedMapX = TeleporterDestID(0)
+    SavedMapY = TeleporterDestID(1)
+    ' Player.x = (TeleporterDestID(2) + 1) * 16 + 8
+    ' Player.y = (TeleporterDestID(3)) * 16 + 8
+    WorldCommands "/tp " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))), 0 'idk why doing it manually wasnt working right so fuck it worldcommands
+    LOADMAP (SavedMap)
+End Sub
+
+Sub FormatTeleportStringToDestArray (CommandString As String)
+    Dim CommandBase As String
+    Dim Parameters(10) As String
+    Dim LastPos
+    Dim i, ii
+
+    'yeah i literally just copied and pasted the command parameter parser and modified it slightly, i dont care fuck me
+    CommandString = CommandString + ":" 'adds an aditional space to the end of the command string so the parameter parse function can actually grab the last parameter
+    CommandBase = LCase$(Trim$(Left$(CommandString, InStr(CommandString, " ")))) 'parses out the base command into a seperate string
+    LastPos = InStr(CommandString, " ") 'pulls the start position of the first parameter (assuming only 1 space before the parameter, awaiting testing for various garbage inputs and thing not expected
+    'parses command parameters into an array to make managing a bit easier
+    For i = 0 To 5
+
+        Parameters(i) = LCase$(Trim$(Mid$(CommandString, LastPos, InStr(LastPos + 1, CommandString, ":") - LastPos)))
+        If Left$(Parameters(i), 1) = ":" Then Parameters(i) = Right$(Parameters(i), Len(Parameters(i)) - 1)
+        LastPos = InStr(LastPos + 1, CommandString, ":")
+        If Parameters(i) = CommandBase Then Exit For 'kills looping for additional parameters that dont exist and eventually just pulling the command as parameters... not that it really matters, nor does this actually work
+
+    Next
+    TeleporterDestID(0) = Val(Parameters(0))
+    TeleporterDestID(1) = Val(Parameters(1))
+    TeleporterDestID(5) = Val(Parameters(2))
+    TeleporterDestID(2) = Val(Parameters(3))
+    TeleporterDestID(3) = Val(Parameters(4))
+End Sub
+
+
+Sub TileCommands (CommandString As String)
+    Dim Unlinked
+    Unlinked = 0
+    Dim Linked
+    Linked = 1
+    Select Case TileCommand(2)
+        Case 57, 58, 59
+            Select Case Trim$(CommandString)
+                Case ":unlink"
+                    Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
+                    Put #1, 5, Unlinked
+                    Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))) As #2
+                    Put #2, 5, Unlinked
+                    Close #1
+                    Close #2
+                    SendChat Chr$(21) + "Unlinked Successfully"
+                    SendChat Chr$(21) + "READY"
+                    WallTile(TileCommand(0), TileCommand(1)) = 58
+                    WallTile(TileCommand(0) + 1, TileCommand(1)) = 65
+                Case ":security"
+                    If Virus.Status = 0 Then SendChat Chr$(21) + "ARN Security Lock-Down Protocol is active. All INES Teleporters have been delinked."
+                    If Virus.Status = 0 Then SendChat Chr$(21) + "Use command :unlock to disable the Lock-Down Protocol."
+                    If Virus.Status > 0 Then SendChat Chr$(21) + "ARN Lock-Down Malfunction, activating Lock-Down Protocol is impossible."
+                    SendChat Chr$(21) + "READY"
+                Case ":unlock"
+                    If Virus.Status = 0 Then
+                        Virus.Status = 1
+                        UpdateMap
+                        SendChat Chr$(21) + "ARN Security Lock-Down Protocol Disabled"
+                        SendChat Chr$(21) + "ERROR: Malfunction in security protocols"
+                        SendChat Chr$(21) + "ARN Security Egress Doors Retracted"
+                        SendChat Chr$(21) + "READY"
+                    End If
+                Case ":exit"
+                    TileCommand(0) = 0
+                    TileCommand(1) = 0
+                    TileCommand(2) = 0
+                    TileCommand(3) = 0
+                    If WallTile(TileCommand(0) + 1, TileCommand(1)) = 66 Then WallTile(TileCommand(0) + 1, TileCommand(1)) = 65
+                    SendChat Chr$(21) + "Terminal interaction has been terminated."
+            End Select
+            If Left$(CommandString, 5) = ":link" Then
+                If Virus.Status > 0 Then 'link the damn teleporters
+                    FormatTeleportStringToDestArray CommandString
+                    DebugPrint CommandString
+                    DebugPrint "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3)))
+                    Sleep
+                    If FileExists("Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3)))) Then
+                        Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
+                        Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))) As #2
+                        Put #1, 1, TeleporterDestID(0)
+                        Put #1, 2, TeleporterDestID(1)
+                        Put #1, 3, TeleporterDestID(2)
+                        Put #1, 4, TeleporterDestID(3)
+                        Put #1, 5, Linked
+                        Put #1, 6, TeleporterDestID(5)
+
+                        Put #2, 1, SavedMapX
+                        Put #2, 2, SavedMapY
+                        Put #2, 3, TileCommand(0)
+                        Put #2, 4, TileCommand(1)
+                        Put #2, 5, Linked
+                        Put #2, 6, CurrentDimension
+                        Close #1
+                        Close #2
+                        SendChat Chr$(21) + "Link Successful"
+                        SendChat Chr$(21) + "READY"
+                        WallTile(TileCommand(0), TileCommand(1)) = 59
+                    Else
+                        SendChat Chr$(21) + "ERROR: EID Target not found on network"
+                    End If
+                Else
+                    SendChat Chr$(21) + "ERROR: Unable to link INES Teleporter while Lock-Down Protocol is active."
+                End If
+            End If
+    End Select
+End Sub
+
+
 Sub UseItem (Slot, vSlot)
     Static ConsumeCooldown
     Static WeaponCooldown
     Static ToolDelay
     Select Case Inventory(vSlot, Slot, 0)
+        Case -1 'open hand
+            Print "used open hand, execute tile interaction for tileID"
+            TileInteract FacingX, FacingY
         Case 0, 5 'Block placing
-            If Inventory(vSlot, Slot, 0) = 5 Then
+            If Inventory(vSlot, Slot, 0) = 5 Then 'farmland i think idr
                 If GroundTile(FacingX, FacingY) <> 21 Then Exit Sub
             End If
             If Inventory(vSlot, Slot, 3) = 16 Then
@@ -2185,6 +2504,11 @@ Sub UseItem (Slot, vSlot)
 
             End If
 
+        Case 3 'special item uses
+            'case item 104 (aetherian energy sphere)
+
+            'check if tile facing is a discharged teleporter pad
+            'if is, use item and replace with charged pad
 
         Case 4 'consumables
             If CurrentTick >= ConsumeCooldown Then
@@ -4174,6 +4498,8 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
                 End If
 
             End If
+        Case 12 'teleport INES
+            TeleportMapChange
 
 
     End Select
@@ -4191,6 +4517,17 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
+        Case "Inside Teleporter Pad (Active)"
+            Select Case Value
+                Case 0
+                    EffectIndex = 12
+                Case 1
+                    EffectIndex = 2
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = 0
+            End Select
         Case "Temperature Freezing"
             Select Case Value
                 Case 0
@@ -4699,6 +5036,8 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TotalDelay
     Static LightStep
     Dim i, ii
+
+    'TODO: Rewrite this section to capture player movement and force transition if they touch the border
     If LightStep <= 12 Then
         Select Case Player.facing
             Case 0
@@ -4718,12 +5057,14 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Else
         SAVEMAP
         CurrentEntities = 0
+
+        'execute map change via border crossing
         If Command = 0 Then
             Select Case Player.facing
                 Case 0
                     SavedMapY = SavedMapY - 1
                     LOADMAP (SavedMap)
-                    Player.y = Exp.MapSizeY * 16
+                    Player.y = (Exp.MapSizeY * 16) - 16
                 Case 1
                     SavedMapY = SavedMapY + 1
                     LOADMAP (SavedMap)
@@ -4731,32 +5072,61 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
                 Case 2
                     SavedMapX = SavedMapX - 1
                     LOADMAP (SavedMap)
-                    Player.x = Exp.MapSizeX * 16
+                    Player.x = (Exp.MapSizeX * 16) - 16
                 Case 3
                     SavedMapX = SavedMapX + 1
                     LOADMAP (SavedMap)
                     Player.x = 0
             End Select
         End If
+
+        'execute map change via command
         If Command = 1 Then
             SavedMapX = CommandMapX
             SavedMapY = CommandMapY
             LOADMAP (SavedMap)
         End If
+
+
+        'clear tile under player if ocupied
+        If TileIndexData(WallTile(PlayerTileX, PlayerTileY), 0) <> 0 Then WallTile(PlayerTileX, PlayerTileY) = 1
+
+        'update tiles on  new map
         For i = 0 To Exp.MapSizeY + 1
             For ii = 0 To Exp.MapSizeX + 1
                 UpdateTile ii, i
             Next
         Next
+
+
         SpreadLight (1)
         Flag.FadeIn = 1
         LightStep = 0
+        TileCommand(3) = 0
     End If
 
     If Player.movingx = 0 And Player.movingy = 0 And Command = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
     OverlayLightLevel = LightStep
 
     'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
+End Sub
+
+Sub DebugPrint (Fuck$)
+
+    Cls
+    PrintMode FillBackground
+    Print Fuck$
+    Display
+End Sub
+
+Sub UpdateMap
+    Dim i, ii
+    For i = 0 To Exp.MapSizeX
+        For ii = 0 To Exp.MapSizeY
+            UpdateTile i, ii
+        Next
+    Next
+    SpreadLight 1
 End Sub
 
 Sub UpdateTile (TileX, TileY)
@@ -4779,6 +5149,9 @@ Sub UpdateTile (TileX, TileY)
         'check for active teleport link
         'if no longer acive, break link walltile(tilex,tiley)=58
     End If
+
+    If TileCommand(3) = 0 And WallTile(TileX, TileY) = 66 Then WallTile(TileX, TileY) = 65
+
 
     If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
@@ -5309,20 +5682,20 @@ Sub DEV
                 Print "Health:"; Player.health
             Case "inv", "inventory", "2"
                 Print "Inventory Data"
-                If CursorHoverPage = 1 Then
-                    Select Case Inventory(CursorHoverY, CursorHoverX, 0)
+                If CursorHoverPage = 1 Or CursorHoverPage = 0 Then
+                    Select Case Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 0)
                         Case 0
-                            Print "Tile: "; Trim$((ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0))); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | TileID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); " | Layer:"; Str$(Inventory(CursorHoverY, CursorHoverX, 4)); " | "; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                            Print "Tile: "; Trim$((ItemName(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9), 0))); " | SS:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 2))); " | TileID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 3)); " | Layer:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 4)); " | "; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9)); ""
                         Case 1
-                            Print "Tool: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 4))); " | Type:"; Str$(Inventory(CursorHoverY, CursorHoverX, 5)); " | Strength:"; Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                            Print "Tool: "; Trim$(ItemName(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 4))); " | Type:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 5)); " | Strength:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9)); ""
                         Case 2
-                            Print "Sword: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 4))); " | Delay:"; Str$(Inventory(CursorHoverY, CursorHoverX, 5)); " | Damage:"; Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); " | Range"; Str$(Inventory(CursorHoverY, CursorHoverX, 10)); " | Speed:"; Str$(Inventory(CursorHoverY, CursorHoverX, 11));
+                            Print "Sword: "; Trim$(ItemName(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 4))); " | Delay:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 5)); " | Damage:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9)); " | Range"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 10)); " | Speed:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 11));
                         Case 3
-                            Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY, CursorHoverX, 4)) + Str$(Inventory(CursorHoverY, CursorHoverX, 5)) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                            Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 4)) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 5)) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9)); ""
                         Case Else
                             Print "Unknown";
-                            If Inventory(CursorHoverY, CursorHoverX, 9) > -1 Then Print ": "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0));
-                            Print ; " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY, CursorHoverX, 4)) + Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                            If Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9) > -1 Then Print ": "; Trim$(ItemName(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9), 0));
+                            Print ; " | SS:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 4)) + Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY + 1 - CursorHoverPage, CursorHoverX, 9)); ""
                     End Select
                 End If
                 'For i = 0 To InvParameters
@@ -5753,6 +6126,10 @@ Sub SendChat (ChatMessage As String)
         WorldCommands ChatMessage, Flag.CommandFeedback
         Exit Sub
     End If
+    If Left$(ChatMessage, 1) = ":" And noPlayerTag = 0 Then
+        TileCommands ChatMessage
+        Exit Sub
+    End If
 
 
     If noPlayerTag = 0 Then
@@ -5973,6 +6350,10 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
         Case "/structure", "/stg"
             GenerateStructure Parameters(0)
             If Feedback = 1 Then SendChat Chr$(21) + "Generated Structure " + Parameters(0) + " at a random position on this map"
+        Case "/liststructures", "/lsst" 'this command disrespects feedback rules because it only outputs text
+            SendChat Chr$(21) + "TestStructure: a generic structure to test generated structure, and loot generation"
+            SendChat Chr$(21) + "ARN_EgressGateway: an ARN node that has just a teleporter"
+            SendChat Chr$(21) + "RuinedCottage: a small cottage like structure that has a blown out entrance, and some small loot"
         Case "/explode"
             Explosion Val(Parameters(1)), Val(Parameters(2)), Val(Parameters(0)), 0
             If Feedback = 1 Then SendChat Chr$(21) + "Boom!"
@@ -5997,6 +6378,14 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
         Case "/feedback"
             Flag.CommandFeedback = Flag.CommandFeedback + 1
             If Feedback = 1 Then SendChat Chr$(21) + "Command Feedback Toggled"
+        Case "/errorfeedback", "/efb"
+            Flag.ErrorFeedback = Flag.ErrorFeedback + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Error Feedback Toggled"
+        Case "/errorresolvelimit", "/erl"
+            Flag.ErrorAutoResolve = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Error Auto Resolve limit set to " + Parameters(0)
+        Case "/errorcounter", "/erc" 'this intentionally does not respect command feedback rules, because this is a debug level command that only outputs text
+            SendChat Chr$(21) + Trim$(Str$(ErrorCounter)) + "/" + Trim$(Str$(Flag.ErrorAutoResolve))
         Case "/spreadlight", "/spl"
             SpreadLight (1)
             If Val(Parameters(0)) = 1 Then SpreadHeat
@@ -6102,7 +6491,6 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
                     Game.Language = "Spanish"
             End Select
             If Feedback = 1 Then SendChat Chr$(21) + Language_has_been_updated
-
 
         Case "/frametarget", "/fps"
 
@@ -6822,6 +7210,21 @@ End Sub
 
 Sub ErrorHandler
     Dim ParsedError
+    Dim UnSkipable_Error
+
+    'Error Pre Parser
+    'This section looks at specific error codes to determin further information about the error
+    'such as a specific error occuring on a specific line, resulting in more detailed error information
+    ParsedError = Err
+    If Err = 9 And ErrorLine = 22 Then ParsedError = 106: UnSkipable_Error = 1
+    If Err = 102 Then UnSkipable_Error = 1
+
+    If Flag.ErrorAutoResolve > 0 And UnSkipable_Error = 0 Then
+        If Flag.ErrorFeedback = 1 Then SendChat Chr$(21) + "(" + Trim$(Str$(ErrorCounter)) + ") Error " + Trim$(Str$(ParsedError)) + " Occured on line number " + Trim$(Str$(ErrorLine)) + " (Disable Flag.ErrorAutoResolve to see Detailed Info)"
+        ErrorCounter = ErrorCounter + 1
+        If ErrorCounter <= Flag.ErrorAutoResolve Then Exit Sub
+    End If
+
     AutoDisplay
     Cls
     PlaySound Sounds.error
@@ -6829,13 +7232,14 @@ Sub ErrorHandler
     KeyClear
     Locate 1, 1
     CENTERPRINT "CDF ERROR HANDLER"
-    Print "Error Code:"; Err
-    If ScreenRezX > 0 Then Locate 2, 1
+    Print "Error Code:"; ParsedError
+    If ScreenRezX > 0 Then Locate 2, 1 'this makes it so if initilization hasnt happened yet, it wont overwrite the error code with the line number
     ENDPRINT "Error Line:" + Str$(ErrorLine)
     ' Print ScreenRezX, ScreenRezY
     '  If Exp.Active <> 0 Then
     Print "Active Experimental Mode:" + Trim$(Str$(Exp.Active))
     Print "Map Size: " + Trim$(Str$(Exp.MapSizeX)) + ","; Trim$(Str$(Exp.MapSizeY)) + " PL:" + Trim$(Str$(Exp.ParLen))
+    Locate 4, 1: ENDPRINT "Error Freq Counter: " + Trim$(Str$(ErrorCounter)) + "/" + Trim$(Str$(Flag.ErrorAutoResolve))
     ' End If
     Dim i
     For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
@@ -6843,12 +7247,7 @@ Sub ErrorHandler
     Print
     '       PRINT "--------------------------------------------------------------------------------"
 
-    'Error Pre Parser
-    'This section looks at specific error codes to determin further information about the error
-    ' such as a specific error occuring on a specific line, resulting in more detailed error information
 
-    ParsedError = Err
-    If Err = 9 And ErrorLine = 22 Then ParsedError = 106
 
     Select Case ParsedError
         Case 100
@@ -6988,8 +7387,7 @@ End Sub
 Sub CONTPROMPT
     Print
     Print
-
-    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
+    CENTERPRINT "(I)gnore this error and attempt to continue anyway, (Q)uit to desktop"
     Do
         If KeyDown(113) Then System
         If KeyDown(105) Then Exit Do

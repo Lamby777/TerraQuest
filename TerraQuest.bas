@@ -22,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240506A"
-Game.Version = "B1.3-240506A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240508A"
+Game.Version = "B1.3-240508A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -2156,23 +2156,13 @@ Sub TileInteract (TileX, TileY)
                     Get #1, 5, TeleporterDestID(4) 'link status
                     Get #1, 6, TeleporterDestID(5) 'dimension
                     Close #1
-                    DebugPrint "DestID"
-                    Print TeleporterDestID(0)
-                    Print TeleporterDestID(1)
-                    Print TeleporterDestID(2)
-                    Print TeleporterDestID(3)
-                    Print TeleporterDestID(4)
-                    Print TeleporterDestID(5)
-                    Display
-                    Sleep
-                    '   If TeleporterDestID(4) > 1 Then TeleporterDestID(4) = 1
                 Else
                     TeleporterDestID(4) = 0
                     Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
                     Put #1, 5, TeleporterDestID(4) 'link status
                     Close #1
                 End If
-                DebugPrint "Dest Link Status" + Str$(TeleporterDestID(4)): Sleep
+
                 If TeleporterDestID(4) = 1 Then 'check if matching teleporter is also paired
                     Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))) As #1
                     Get #1, 1, TeleLinkCheck(0) 'mapx
@@ -2183,24 +2173,9 @@ Sub TileInteract (TileX, TileY)
                     Get #1, 6, TeleLinkCheck(5) 'dimension
 
                     If TeleLinkCheck(0) = SavedMapX And TeleLinkCheck(1) = SavedMapY And TeleLinkCheck(2) = TileCommand(0) And TeleLinkCheck(3) = TileCommand(1) And TeleLinkCheck(4) = 1 And TeleLinkCheck(5) = CurrentDimension Then TeleporterDestID(4) = 1 Else TeleporterDestID(4) = 0
-                    DebugPrint "Test"
-                    Print TeleLinkCheck(0)
-                    Print SavedMapX
-                    Print TeleLinkCheck(1)
-                    Print SavedMapY
-                    Print TeleLinkCheck(2)
-                    Print TileCommand(0)
-                    Print TeleLinkCheck(3)
-                    Print TileCommand(1)
-                    Print TeleLinkCheck(4)
-                    Print 1
-                    Print TeleLinkCheck(5)
-                    Print CurrentDimension
-                    Display
-                    Sleep
                     Close #1
                 End If
-                DebugPrint Str$(TeleporterDestID(4)): Sleep
+
                 If Virus.Status > 0 Then If TeleporterDestID(4) = 1 Then WallTile(TileCommand(0), TileCommand(1)) = 59 Else WallTile(TileCommand(0), TileCommand(1)) = 58
 
                 SendChat Chr$(21) + "ARN-INES Management Console"
@@ -2247,13 +2222,14 @@ Sub TeleportMapChange
     For i = 0 To 4
         TileCommand(i) = 0
     Next
+    SendChat Chr$(21) + "Teleporting..."
     SAVEMAP
     ChangeDimension TeleporterDestID(5)
     SavedMapX = TeleporterDestID(0)
     SavedMapY = TeleporterDestID(1)
     ' Player.x = (TeleporterDestID(2) + 1) * 16 + 8
     ' Player.y = (TeleporterDestID(3)) * 16 + 8
-    WorldCommands "/tp " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))), 0 'idk why doing it manually wasnt working right so fuck it worldcommands
+    WorldCommands "/tp " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3) - 1)), 0 'idk why doing it manually wasnt working right so fuck it worldcommands
     LOADMAP (SavedMap)
 End Sub
 
@@ -2285,9 +2261,9 @@ End Sub
 
 
 Sub TileCommands (CommandString As String)
-    Dim Unlinked
+    Dim Unlinked As Integer64
     Unlinked = 0
-    Dim Linked
+    Dim Linked As Integer64
     Linked = 1
     Select Case TileCommand(2)
         Case 57, 58, 59
@@ -2328,9 +2304,6 @@ Sub TileCommands (CommandString As String)
             If Left$(CommandString, 5) = ":link" Then
                 If Virus.Status > 0 Then 'link the damn teleporters
                     FormatTeleportStringToDestArray CommandString
-                    DebugPrint CommandString
-                    DebugPrint "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3)))
-                    Sleep
                     If FileExists("Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3)))) Then
                         Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(SavedMapX)) + " " + Trim$(Str$(SavedMapY)) + " " + Trim$(Str$(CurrentDimension)) + " " + Trim$(Str$(TileCommand(0))) + " " + Trim$(Str$(TileCommand(1))) As #1
                         Open "Assets\Worlds\" + WorldName + "\TeleportLinks\" + Trim$(Str$(TeleporterDestID(0))) + " " + Trim$(Str$(TeleporterDestID(1))) + " " + Trim$(Str$(TeleporterDestID(5))) + " " + Trim$(Str$(TeleporterDestID(2))) + " " + Trim$(Str$(TeleporterDestID(3))) As #2
@@ -2341,17 +2314,37 @@ Sub TileCommands (CommandString As String)
                         Put #1, 5, Linked
                         Put #1, 6, TeleporterDestID(5)
 
-                        Put #2, 1, SavedMapX
-                        Put #2, 2, SavedMapY
-                        Put #2, 3, TileCommand(0)
-                        Put #2, 4, TileCommand(1)
-                        Put #2, 5, Linked
-                        Put #2, 6, CurrentDimension
+                        'BULLSHIT BUG FIX INCOMMING
+                        'This shit had me stumped for days, and i am documenting this here so future me, and possibly other weary travlers can heed warning
+                        'it is CRUCIAL for variable types to match when saving and loading, otherwise arbitrarty values are effortlessly loaded breaking EVERYTHING
+                        'so in this section, because everything in the teleporter link files HAS to be integer64 (cause i boxed myself into this corner with my little arrays)
+                        'we are going to make 6 dummy variables to convert these values into integer64 so i can save them, because f u c k... m e ...
+                        Dim FuckingBullshit(5) As Integer64
+                        FuckingBullshit(0) = SavedMapX
+                        FuckingBullshit(1) = SavedMapY
+                        FuckingBullshit(2) = TileCommand(0)
+                        FuckingBullshit(3) = TileCommand(1)
+                        FuckingBullshit(4) = Linked
+                        FuckingBullshit(5) = CurrentDimension
+                        'now back to our regularly scheduled programming
+
+                        Put #2, 1, FuckingBullshit(0)
+                        Put #2, 2, FuckingBullshit(1)
+                        Put #2, 3, FuckingBullshit(2)
+                        Put #2, 4, FuckingBullshit(3)
+                        Put #2, 5, FuckingBullshit(4)
+                        Put #2, 6, FuckingBullshit(5)
                         Close #1
                         Close #2
+
                         SendChat Chr$(21) + "Link Successful"
-                        SendChat Chr$(21) + "READY"
+                        SendChat Chr$(21) + "Closing Interaction"
                         WallTile(TileCommand(0), TileCommand(1)) = 59
+                        TileCommand(0) = 0
+                        TileCommand(1) = 0
+                        TileCommand(2) = 0
+                        TileCommand(3) = 0
+
                     Else
                         SendChat Chr$(21) + "ERROR: EID Target not found on network"
                     End If
@@ -2369,7 +2362,7 @@ Sub UseItem (Slot, vSlot)
     Static ToolDelay
     Select Case Inventory(vSlot, Slot, 0)
         Case -1 'open hand
-            Print "used open hand, execute tile interaction for tileID"
+            'Print "used open hand, execute tile interaction for tileID"
             TileInteract FacingX, FacingY
         Case 0, 5 'Block placing
             If Inventory(vSlot, Slot, 0) = 5 Then 'farmland i think idr
@@ -4499,8 +4492,9 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
 
             End If
         Case 12 'teleport INES
-            TeleportMapChange
-
+            If Entity = 0 Then
+                TeleportMapChange
+            End If
 
     End Select
 

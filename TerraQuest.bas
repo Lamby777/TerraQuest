@@ -46,6 +46,8 @@ Dim Shared Flag.ExitToTitle As Unsigned Bit
 Dim Shared Flag.TransparentCeil As Unsigned Bit
 Dim Shared Flag.ErrorAutoResolve
 Dim Shared Flag.ErrorFeedback As Unsigned Bit
+Dim Shared Flag.NewLighting As Unsigned Bit
+Dim Shared Flag.NoFlicker As Unsigned Bit
 
 Dim Shared TileCommand(4)
 Dim Shared TeleporterDestID(5) As Integer64
@@ -86,6 +88,7 @@ Exp.MapSizeX = 40
 Exp.MapSizeY = 30
 Exp.ParLen = 256
 Flag.CommandFeedback = 1
+Flag.NewLighting = 1
 
 'parse command line arguments
 Select Case LCase$(Command$)
@@ -402,6 +405,7 @@ Do
     RandomUpdates
     DelayUpdates
     'spreadlightd
+    If CurrentTick Mod 20 = 0 And Flag.NewLighting = 1 Then GaussianLightSpread
     SpreadHeat
     Precip2
     If CurrentRefresh <= 0 Then SetLighting
@@ -1999,9 +2003,52 @@ Sub spreadlightd
 
 End Sub
 
+Sub GaussianLightSpread
+    'Static AuxLightArray()
+    'ReDim Preserve AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
+    Dim AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
+    Dim ix, iy, iix, iiy
+    Dim esx, esy 'efficiency limiters
+    Dim FlickerFactor
+
+    For ix = 0 To Exp.MapSizeX
+        For iy = 0 To Exp.MapSizeY
+            LocalLightLevel(ix, iy) = 0
+        Next
+    Next
+
+    For ix = 0 To Exp.MapSizeX 'loop thorough all map tiles  (Source Tile)
+        For iy = 0 To Exp.MapSizeY
+            If TileData(ix, iy, 8) > 0 Then ' if tile is a light source
+                esx = ix - TileData(ix, iy, 8)
+                esy = iy - TileData(ix, iy, 8)
+                If esx < 0 Then esx = 0
+                If esx > Exp.MapSizeX - (TileData(ix, iy, 8) * 2) Then esx = Exp.MapSizeX - (TileData(ix, iy, 8) * 2)
+                If esy < 0 Then esy = 0
+                If esy > Exp.MapSizeY - (TileData(ix, iy, 8) * 2) Then esy = Exp.MapSizeY - (TileData(ix, iy, 8) * 2)
+
+                If TileData(ix, iy, 12) = 1 And Flag.NoFlicker = 0 Then FlickerFactor = (0.125 - (Rnd * 0.25))
+
+                For iix = esx To esx + (TileData(ix, iy, 8) * 2) 'test tile (spread tile)
+                    For iiy = esy To esy + (TileData(ix, iy, 8) * 2)
+                        AuxLightArray(iix, iiy) = Round(SexyGaussian(TileData(ix, iy, 7), TileData(ix, iy, 8) + FlickerFactor, ix, iy, iix, iiy) + FlickerFactor)
+                        If AuxLightArray(iix, iiy) > LocalLightLevel(iix, iiy) Then LocalLightLevel(iix, iiy) = AuxLightArray(iix, iiy)
+                    Next
+                Next
+            End If
+        Next
+    Next
+End Sub
+
+Function SexyGaussian (Spread, Strength, SourceX, SourceY, TestX, TestY)
+    SexyGaussian = Strength * ((Spread ^ (-(TestX - SourceX) ^ 2)) * (Spread ^ (-(TestY - SourceY) ^ 2)))
+End Function
 
 Sub SpreadLight (updates)
-    'Exit Sub
+    If Flag.NewLighting = 1 Then
+        '  GaussianLightSpread
+        Exit Sub
+    End If
     Dim As Integer i, ii
     For i = 1 To Exp.MapSizeY
         For ii = 1 To Exp.MapSizeX
@@ -5154,11 +5201,25 @@ Sub UpdateTile (TileX, TileY)
     TileData(TileX, TileY, 4) = 255
     TileData(TileX, TileY, 5) = 255
     TileData(TileX, TileY, 6) = 255
-    TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
+    TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5) 'update: change from 5 to 11 to reference new location, if used 'leaving this here for now, but this erroniously grabs the index for is solid (now light spread factor) and uses that for is container, even though containers reference the tileindexdata rather than tiledata
     TileData(TileX, TileY, 8) = 0
+
+    'sets tiledata light strength to whichever is the highest in the stack
     If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
     If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
+
+    'sets tiledata light spread factor to whatever tile in the stack gives off heat (yeah i know this sets up a bug for multiple tiles in a stack that give light, idc rn it doesnt happen ill fix it later)
+    If TileIndexData(GroundTile(TileX, TileY), 5) > 0 Then TileData(TileX, TileY, 7) = TileIndexData(GroundTile(TileX, TileY), 5)
+    If TileIndexData(WallTile(TileX, TileY), 5) > 0 Then TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
+    If TileIndexData(CeilingTile(TileX, TileY), 5) > 0 Then TileData(TileX, TileY, 7) = TileIndexData(CeilingTile(TileX, TileY), 5)
+
+    'sets flicker flag, idk i thought this was a cool way to do it
+    TileData(TileX, TileY, 12) = 0
+    TileData(TileX, TileY, 12) = TileIndexData(GroundTile(TileX, TileY), 12) + TileIndexData(WallTile(TileX, TileY), 12) + TileIndexData(CeilingTile(TileX, TileY), 12)
+    If TileData(TileX, TileY, 12) > 1 Then TileData(TileX, TileY, 12) = 1
+
+
     TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
     TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
     TileData(TileX, TileY, 16) = TileIndexData(GroundTile(TileX, TileY), 16) + TileIndexData(WallTile(TileX, TileY), 16) + TileIndexData(CeilingTile(TileX, TileY), 16)
@@ -5621,6 +5682,8 @@ Sub DEV
         If Flag.isStrafing = 1 Then ENDPRINT "Player is Strafing"
         If Flag.ExitToTitle = 1 Then ENDPRINT "Exiting to title, Goodbye Friend"
         If Flag.TransparentCeil = 1 Then ENDPRINT "Ceiling Tile Flashing is Disabled"
+        If Flag.NewLighting = 1 Then ENDPRINT "Gaussian Lighing is Enabled"
+        If Flag.NoFlicker = 1 Then ENDPRINT "Natural Lighting Flicker is Disabled"
 
 
 
@@ -6267,6 +6330,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
                 Next
             Next
 
+
         Case "/vl", "/viruslevel"
             Virus.Status = Val(Parameters(0))
             If Feedback = 1 Then SendChat Chr$(21) + "Virus level updated"
@@ -6490,6 +6554,11 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
 
         Case "/ceiltrans", "/ct"
             Flag.TransparentCeil = Flag.TransparentCeil + 1
+
+        Case "/newlight", "/nl"
+            Flag.NewLighting = Flag.NewLighting + 1
+        Case "/noflicker", "/nf"
+            Flag.NoFlicker = Flag.NoFlicker + 1
             '--------------------------------
         Case Else
             SendChat Chr$(21) + Command_not_found_1 + Chr$(34) + CommandBase + Chr$(34) + Command_not_found_2

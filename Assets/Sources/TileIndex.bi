@@ -16,14 +16,14 @@ TileIndexData(TileID, 1) = 0 'casts shadow
 TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 0 'resistance
-TileIndexData(TileID, 5) = 0 'is solid
-TileIndexData(TileID, 6) = 0 'light level cast
+TileIndexData(TileID, 5) = 0 'Light Spread Factor
+TileIndexData(TileID, 6) = 0 'Light Source Strength
 TileIndexData(TileID, 7) = 0 'is container
 TileIndexData(TileID, 8) = 0 'Crafting Station Level
 TileIndexData(TileID, 9) = 0 'Friction  (Ground Only)
 TileIndexData(TileID, 10) = 0 'max speed (Ground Only)
 TileIndexData(TileID, 11) = 0 'tile spread
-TileIndexData(TileID, 12) = 0 'Interactable
+TileIndexData(TileID, 12) = 0 'Light Flicker
 TileIndexData(TileID, 13) = 0 'Unused
 TileIndexData(TileID, 14) = 0 'requires pickaxe
 TileIndexData(TileID, 15) = 0 'has lootpool
@@ -71,7 +71,7 @@ TileIndexData(2, 1) = 0 'casts shadow
 TileIndexData(2, 2) = 0 'blocks shadow
 TileIndexData(2, 3) = 0 'has interior shadow
 TileIndexData(2, 4) = 5 'resistance
-TileIndexData(2, 5) = 1 'is solid
+TileIndexData(2, 5) = 0 'light spread factor 'is solid
 TileIndexData(2, 9) = 0.15 'friction
 TileIndexData(2, 10) = 1
 
@@ -87,7 +87,7 @@ TileIndexData(3, 1) = 0 'casts shadow
 TileIndexData(3, 2) = 0 'blocks shadow
 TileIndexData(3, 3) = 0 'has interior shadow
 TileIndexData(3, 4) = 5 'resistance
-TileIndexData(3, 5) = 1 'is solid
+TileIndexData(3, 5) = 0 'light spread factor 'is solid
 TileIndexData(3, 9) = 0.15 'Friction
 TileIndexData(3, 10) = 1.2
 
@@ -104,7 +104,7 @@ TileIndexData(4, 1) = 0 'casts shadow
 TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
 TileIndexData(4, 4) = 4 'resistance
-TileIndexData(4, 5) = 1 'is solid
+TileIndexData(4, 5) = 0 'light spread factor 'is solid
 TileIndexData(4, 9) = 0.15 'Friction
 TileIndexData(4, 10) = 0.8
 
@@ -152,7 +152,7 @@ TileIndexData(7, 1) = 1 'casts shadow
 TileIndexData(7, 2) = 1 'blocks shadow
 TileIndexData(7, 3) = 0 'has interior shadow
 TileIndexData(7, 4) = 24 'resistance
-TileIndexData(7, 5) = 1 'is solid
+TileIndexData(7, 5) = 0 'light spread factor 'is solid
 TileIndexData(7, 14) = 1
 
 
@@ -167,7 +167,7 @@ TileIndexData(8, 1) = 1 'casts shadow
 TileIndexData(8, 2) = 1 'blocks shadow
 TileIndexData(8, 3) = 0 'has interior shadow
 TileIndexData(8, 4) = 19 'resistance
-TileIndexData(8, 5) = 1 'is solid
+TileIndexData(8, 5) = 0 'light spread factor 'is solid
 
 
 TileName(9, 0) = "Unlit Campfire" 'Name of the tile
@@ -194,8 +194,9 @@ TileIndexData(10, 1) = 0 'casts shadow
 TileIndexData(10, 2) = 0 'blocks shadow
 TileIndexData(10, 3) = 0 'has interior shadow
 TileIndexData(10, 4) = 15 'resistance
-TileIndexData(10, 5) = 0 'is solid
+TileIndexData(10, 5) = 1.02 'light spread factor
 TileIndexData(10, 6) = 14 'light casts
+TileIndexData(10, 12) = 1 'Light Flicker
 TileIndexData(10, 16) = 0.13 'thermal output
 
 TileName(11, 0) = "Ground Item" 'Name of the tile
@@ -273,7 +274,7 @@ TileIndexData(15, 1) = 1 'casts shadow
 TileIndexData(15, 2) = 1 'blocks shadow
 TileIndexData(15, 3) = 0 'has interior shadow
 TileIndexData(15, 4) = 19 'resistance
-TileIndexData(15, 5) = 1 'is soli
+TileIndexData(15, 5) = 0 'light spread factor 'is soli
 TileIndexData(15, 8) = 3
 
 TileName(16, 0) = "Wooden Ladder" 'Name of the tile
@@ -287,7 +288,7 @@ TileIndexData(16, 1) = 0 'casts shadow
 TileIndexData(16, 2) = 1 'blocks shadow
 TileIndexData(16, 3) = 1 'has interior shadow
 TileIndexData(16, 4) = 19 'resistance
-TileIndexData(16, 5) = 1 'is solid
+TileIndexData(16, 5) = 0 'light spread factor 'is solid
 TileIndexData(16, 9) = 0.8 'Friction
 TileIndexData(16, 10) = 0.8
 
@@ -315,7 +316,7 @@ TileIndexData(19, 1) = 1 'casts shadow
 TileIndexData(19, 2) = 1 'blocks shadow
 TileIndexData(19, 3) = 0 'has interior shadow
 TileIndexData(19, 4) = 26 'resistance
-TileIndexData(19, 5) = 1 'is solid
+TileIndexData(19, 5) = 0 'light spread factor 'is solid
 TileIndexData(19, 14) = 1 'requires pickaxe
 TileIndexData(19, 15) = 1 'has lootpool
 
@@ -345,7 +346,7 @@ TileIndexData(21, 1) = 0 'casts shadow
 TileIndexData(21, 2) = 0 'blocks shadow
 TileIndexData(21, 3) = 0 'has interior shadow
 TileIndexData(21, 4) = 4 'resistance
-TileIndexData(21, 5) = 1 'is solid
+TileIndexData(21, 5) = 0 'light spread factor 'is solid
 TileIndexData(21, 9) = 0.08 'Friction
 TileIndexData(21, 10) = 0.72
 
@@ -360,7 +361,7 @@ TileIndexData(22, 1) = 1 'casts shadow
 TileIndexData(22, 2) = 1 'blocks shadow
 TileIndexData(22, 3) = 0 'has interior shadow
 TileIndexData(22, 4) = 45 'resistance
-TileIndexData(22, 5) = 1 'is soli
+TileIndexData(22, 5) = 0 'light spread factor 'is soli
 TileIndexData(22, 8) = 4
 TileIndexData(22, 14) = 1 'requires pickaxe
 
@@ -375,7 +376,7 @@ TileIndexData(23, 1) = 0 'casts shadow
 TileIndexData(23, 2) = 0 'blocks shadow
 TileIndexData(23, 3) = 0 'has interior shadow
 TileIndexData(23, 4) = 19 'resistance
-TileIndexData(23, 5) = 1 'is solid
+TileIndexData(23, 5) = 0 'light spread factor 'is solid
 TileIndexData(23, 9) = 0.25 'friction
 TileIndexData(23, 10) = 1
 
@@ -391,7 +392,7 @@ TileIndexData(24, 1) = 1 'casts shadow
 TileIndexData(24, 2) = 1 'blocks shadow
 TileIndexData(24, 3) = 0 'has interior shadow
 TileIndexData(24, 4) = 45 'resistance
-TileIndexData(24, 5) = 1 'is soli
+TileIndexData(24, 5) = 0 'light spread factor 'is soli
 TileIndexData(24, 8) = 6
 TileIndexData(24, 14) = 1 'requires pickaxe
 'info: crafting level 2,3,4,5 are reserved for standard tables up to aetherian workbench, level 6 is for imbuement, 7,8,9,10 are for furnaces
@@ -427,7 +428,7 @@ TileIndexData(26, 1) = 0 'casts shadow
 TileIndexData(26, 2) = 0 'blocks shadow
 TileIndexData(26, 3) = 1 'has interior shadow
 TileIndexData(26, 4) = 1000 'resistance
-TileIndexData(26, 5) = 1 'is solid
+TileIndexData(26, 5) = 0 'light spread factor 'is solid
 
 
 
@@ -443,7 +444,7 @@ TileIndexData(27, 1) = 1 'casts shadow
 TileIndexData(27, 2) = 1 'blocks shadow
 TileIndexData(27, 3) = 0 'has interior shadow
 TileIndexData(27, 4) = 54 'resistance
-TileIndexData(27, 5) = 1 'is solid
+TileIndexData(27, 5) = 0 'light spread factor 'is solid
 TileIndexData(27, 14) = 1 'requires pickaxe
 TileIndexData(27, 15) = 1 'has lootpool
 
@@ -459,7 +460,7 @@ TileIndexData(28, 1) = 1 'casts shadow
 TileIndexData(28, 2) = 1 'blocks shadow
 TileIndexData(28, 3) = 0 'has interior shadow
 TileIndexData(28, 4) = 45 'resistance
-TileIndexData(28, 5) = 1 'is solid
+TileIndexData(28, 5) = 0 'light spread factor 'is solid
 TileIndexData(28, 14) = 1 'requires pickaxe
 TileIndexData(28, 15) = 1 'has lootpool
 
@@ -585,7 +586,7 @@ TileIndexData(36, 1) = 1 'casts shadow
 TileIndexData(36, 2) = 1 'blocks shadow
 TileIndexData(36, 3) = 0 'has interior shadow
 TileIndexData(36, 4) = 500 'resistance
-TileIndexData(36, 5) = 1 'is solid
+TileIndexData(36, 5) = 0 'light spread factor 'is solid
 
 TileName(37, 0) = "Aetherian Wall" 'Name of the tile
 TileName(37, 1) = "Placeholder" 'tooltip
@@ -598,7 +599,7 @@ TileIndexData(37, 1) = 1 'casts shadow
 TileIndexData(37, 2) = 1 'blocks shadow
 TileIndexData(37, 3) = 0 'has interior shadow
 TileIndexData(37, 4) = 500 'resistance
-TileIndexData(37, 5) = 1 'is solid
+TileIndexData(37, 5) = 0 'light spread factor 'is solid
 
 TileName(38, 0) = "Aetherian Wall" 'Name of the tile
 TileName(38, 1) = "Placeholder" 'tooltip
@@ -611,7 +612,7 @@ TileIndexData(38, 1) = 1 'casts shadow
 TileIndexData(38, 2) = 1 'blocks shadow
 TileIndexData(38, 3) = 0 'has interior shadow
 TileIndexData(38, 4) = 500 'resistance
-TileIndexData(38, 5) = 1 'is solid
+TileIndexData(38, 5) = 0 'light spread factor 'is solid
 
 TileName(39, 0) = "Aetherian Wall" 'Name of the tile
 TileName(39, 1) = "Placeholder" 'tooltip
@@ -624,7 +625,7 @@ TileIndexData(39, 1) = 1 'casts shadow
 TileIndexData(39, 2) = 1 'blocks shadow
 TileIndexData(39, 3) = 0 'has interior shadow
 TileIndexData(39, 4) = 500 'resistance
-TileIndexData(39, 5) = 1 'is solid
+TileIndexData(39, 5) = 0 'light spread factor 'is solid
 
 TileName(40, 0) = "Aetherian Wall" 'Name of the tile
 TileName(40, 1) = "Placeholder" 'tooltip
@@ -637,7 +638,7 @@ TileIndexData(40, 1) = 1 'casts shadow
 TileIndexData(40, 2) = 1 'blocks shadow
 TileIndexData(40, 3) = 0 'has interior shadow
 TileIndexData(40, 4) = 500 'resistance
-TileIndexData(40, 5) = 1 'is solid
+TileIndexData(40, 5) = 0 'light spread factor 'is solid
 
 TileName(41, 0) = "Aetherian Wall" 'Name of the tile
 TileName(41, 1) = "Placeholder" 'tooltip
@@ -650,7 +651,7 @@ TileIndexData(41, 1) = 1 'casts shadow
 TileIndexData(41, 2) = 1 'blocks shadow
 TileIndexData(41, 3) = 0 'has interior shadow
 TileIndexData(41, 4) = 500 'resistance
-TileIndexData(41, 5) = 1 'is solid
+TileIndexData(41, 5) = 0 'light spread factor 'is solid
 '42 aetherian carpet
 
 TileName(42, 0) = "Aetherian Carpet" 'Name of the tile
@@ -681,8 +682,9 @@ TileIndexData(43, 1) = 0 'casts shadow
 TileIndexData(43, 2) = 1 'blocks shadow
 TileIndexData(43, 3) = 0 'has interior shadow
 TileIndexData(43, 4) = 5 'resistance
-TileIndexData(43, 5) = 0 'is solid
+TileIndexData(43, 5) = 1.05 'is solid
 TileIndexData(43, 6) = 9 'light casts
+TileIndexData(43, 12) = 1 'Light Flicker
 TileIndexData(43, 16) = 0
 
 '44 Ice Campfire
@@ -697,8 +699,9 @@ TileIndexData(44, 1) = 0 'casts shadow
 TileIndexData(44, 2) = 1 'blocks shadow
 TileIndexData(44, 3) = 0 'has interior shadow
 TileIndexData(44, 4) = 15 'resistance
-TileIndexData(44, 5) = 0 'is solid
+TileIndexData(44, 5) = 1.18 'light factor
 TileIndexData(44, 6) = 8 'light casts
+TileIndexData(44, 12) = 0 'Light Flicker
 TileIndexData(44, 16) = -0.08
 
 
@@ -730,7 +733,7 @@ TileIndexData(46, 1) = 0 'casts shadow
 TileIndexData(46, 2) = 0 'blocks shadow
 TileIndexData(46, 3) = 0 'has interior shadow
 TileIndexData(46, 4) = 5 'resistance
-TileIndexData(46, 5) = 1 'is solid
+TileIndexData(46, 5) = 0 'light spread factor 'is solid
 TileIndexData(46, 9) = 0.25 'friction
 TileIndexData(46, 10) = 0.8
 
@@ -746,7 +749,7 @@ TileIndexData(47, 1) = 0 'casts shadow
 TileIndexData(47, 2) = 0 'blocks shadow
 TileIndexData(47, 3) = 0 'has interior shadow
 TileIndexData(47, 4) = 5 'resistance
-TileIndexData(47, 5) = 1 'is solid
+TileIndexData(47, 5) = 0 'light spread factor 'is solid
 TileIndexData(47, 9) = 0.20 'Friction
 TileIndexData(47, 10) = 0.95
 
@@ -763,7 +766,7 @@ TileIndexData(TileID, 1) = 1 'casts shadow
 TileIndexData(TileID, 2) = 1 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
-TileIndexData(TileID, 5) = 1 'is solid
+TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
 TileIndexData(TileID, 6) = 0 'light level cast
 TileIndexData(TileID, 7) = 0 'is container
 TileIndexData(TileID, 8) = 0 'Crafting Station Level
@@ -791,7 +794,7 @@ TileIndexData(36, 1) = 1 'casts shadow
 TileIndexData(36, 2) = 1 'blocks shadow
 TileIndexData(36, 3) = 0 'has interior shadow
 TileIndexData(36, 4) = 500 'resistance
-TileIndexData(36, 5) = 1 'is solid
+TileIndexData(36, 5) = 0 'light spread factor 'is solid
 
 TileName(37, 0) = "Aetherian Wall" 'Name of the tile
 TileName(37, 1) = "Placeholder" 'tooltip
@@ -804,7 +807,7 @@ TileIndexData(37, 1) = 1 'casts shadow
 TileIndexData(37, 2) = 1 'blocks shadow
 TileIndexData(37, 3) = 0 'has interior shadow
 TileIndexData(37, 4) = 500 'resistance
-TileIndexData(37, 5) = 1 'is solid
+TileIndexData(37, 5) = 0 'light spread factor 'is solid
 
 TileName(38, 0) = "Aetherian Wall" 'Name of the tile
 TileName(38, 1) = "Placeholder" 'tooltip
@@ -817,7 +820,7 @@ TileIndexData(38, 1) = 1 'casts shadow
 TileIndexData(38, 2) = 1 'blocks shadow
 TileIndexData(38, 3) = 0 'has interior shadow
 TileIndexData(38, 4) = 500 'resistance
-TileIndexData(38, 5) = 1 'is solid
+TileIndexData(38, 5) = 0 'light spread factor 'is solid
 
 TileName(39, 0) = "Aetherian Wall" 'Name of the tile
 TileName(39, 1) = "Placeholder" 'tooltip
@@ -830,7 +833,7 @@ TileIndexData(39, 1) = 1 'casts shadow
 TileIndexData(39, 2) = 1 'blocks shadow
 TileIndexData(39, 3) = 0 'has interior shadow
 TileIndexData(39, 4) = 500 'resistance
-TileIndexData(39, 5) = 1 'is solid
+TileIndexData(39, 5) = 0 'light spread factor 'is solid
 
 TileName(40, 0) = "Aetherian Wall" 'Name of the tile
 TileName(40, 1) = "Placeholder" 'tooltip
@@ -843,7 +846,7 @@ TileIndexData(40, 1) = 1 'casts shadow
 TileIndexData(40, 2) = 1 'blocks shadow
 TileIndexData(40, 3) = 0 'has interior shadow
 TileIndexData(40, 4) = 500 'resistance
-TileIndexData(40, 5) = 1 'is solid
+TileIndexData(40, 5) = 0 'light spread factor 'is solid
 
 TileName(41, 0) = "Aetherian Wall" 'Name of the tile
 TileName(41, 1) = "Placeholder" 'tooltip
@@ -856,7 +859,7 @@ TileIndexData(41, 1) = 1 'casts shadow
 TileIndexData(41, 2) = 1 'blocks shadow
 TileIndexData(41, 3) = 0 'has interior shadow
 TileIndexData(41, 4) = 500 'resistance
-TileIndexData(41, 5) = 1 'is solid
+TileIndexData(41, 5) = 0 'light spread factor 'is solid
 '42 aetherian carpet
 
 TileName(42, 0) = "Aetherian Carpet" 'Name of the tile
@@ -906,7 +909,7 @@ TileIndexData(57, 1) = 0 'casts shadow
 TileIndexData(57, 2) = 0 'blocks shadow
 TileIndexData(57, 3) = 0 'has interior shadow
 TileIndexData(57, 4) = 999 'resistance
-TileIndexData(57, 5) = 1 'is solid
+TileIndexData(57, 5) = 0 'light spread factor 'is solid
 
 TileName(58, 0) = "Unlinked Computer" 'Name of the tile
 TileName(58, 1) = "Placeholder" 'tooltip
@@ -919,7 +922,7 @@ TileIndexData(58, 1) = 0 'casts shadow
 TileIndexData(58, 2) = 0 'blocks shadow
 TileIndexData(58, 3) = 0 'has interior shadow
 TileIndexData(58, 4) = 999 'resistance
-TileIndexData(58, 5) = 1 'is solid
+TileIndexData(58, 5) = 0 'light spread factor 'is solid
 
 TileName(59, 0) = "Linked Computer" 'Name of the tile
 TileName(59, 1) = "Placeholder" 'tooltip
@@ -932,7 +935,7 @@ TileIndexData(59, 1) = 0 'casts shadow
 TileIndexData(59, 2) = 0 'blocks shadow
 TileIndexData(59, 3) = 0 'has interior shadow
 TileIndexData(59, 4) = 999 'resistance
-TileIndexData(59, 5) = 1 'is solid
+TileIndexData(59, 5) = 0 'light spread factor 'is solid
 
 TileName(60, 0) = "Broken Computer" 'Name of the tile
 TileName(60, 1) = "Placeholder" 'tooltip
@@ -945,7 +948,7 @@ TileIndexData(60, 1) = 0 'casts shadow
 TileIndexData(60, 2) = 0 'blocks shadow
 TileIndexData(60, 3) = 0 'has interior shadow
 TileIndexData(60, 4) = 999 'resistance
-TileIndexData(60, 5) = 1 'is solid
+TileIndexData(60, 5) = 0 'light spread factor 'is solid
 
 TileName(61, 0) = "ARN Egress Gate" 'Name of the tile
 TileName(61, 1) = "Placeholder" 'tooltip
@@ -958,7 +961,7 @@ TileIndexData(61, 1) = 0 'casts shadow
 TileIndexData(61, 2) = 1 'blocks shadow
 TileIndexData(61, 3) = 0 'has interior shadow
 TileIndexData(61, 4) = 500 'resistance
-TileIndexData(61, 5) = 1 'is solid
+TileIndexData(61, 5) = 0 'light spread factor 'is solid
 
 TileName(62, 0) = "Gravel" 'Name of the tile
 TileName(62, 1) = "Placeholder" 'tooltip
@@ -971,7 +974,7 @@ TileIndexData(62, 1) = 1 'casts shadow
 TileIndexData(62, 2) = 1 'blocks shadow
 TileIndexData(62, 3) = 0 'has interior shadow
 TileIndexData(62, 4) = 54 'resistance
-TileIndexData(62, 5) = 1 'is solid
+TileIndexData(62, 5) = 0 'light spread factor 'is solid
 TileIndexData(62, 14) = 1 'requires pickaxe
 TileIndexData(62, 15) = 1 'has lootpool
 
@@ -988,7 +991,7 @@ TileIndexData(63, 1) = 1 'casts shadow
 TileIndexData(63, 2) = 1 'blocks shadow
 TileIndexData(63, 3) = 0 'has interior shadow
 TileIndexData(63, 4) = 54 'resistance
-TileIndexData(63, 5) = 1 'is solid
+TileIndexData(63, 5) = 0 'light spread factor 'is solid
 
 TileID = 64
 TileName(TileID, 0) = "Teleporter Pad (Discharged)" 'Name of the tile
@@ -1002,7 +1005,7 @@ TileIndexData(TileID, 1) = 0 'casts shadow
 TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
-TileIndexData(TileID, 5) = 1 'is solid
+TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
 
 TileID = 65
 TileName(TileID, 0) = "Teleporter Pad (Charged)" 'Name of the tile
@@ -1016,7 +1019,7 @@ TileIndexData(TileID, 1) = 0 'casts shadow
 TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
-TileIndexData(TileID, 5) = 1 'is solid
+TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
 TileIndexData(TileID, 12) = 0 'No Use
 
 
@@ -1033,7 +1036,7 @@ TileIndexData(TileID, 1) = 0 'casts shadow
 TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
-TileIndexData(TileID, 5) = 1 'is solid
+TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
 
 'Red Flower  67
 TileID = 67
@@ -1280,7 +1283,7 @@ TileIndexData(TileID, 1) = 0 'casts shadow
 TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 1000 'resistance
-TileIndexData(TileID, 5) = 0 'is solid
+TileIndexData(TileID, 5) = 1.06 'light factor 'is solid
 TileIndexData(TileID, 6) = 4 'light level cast
 TileIndexData(TileID, 7) = 0 'is container
 TileIndexData(TileID, 8) = 0 'Crafting Station Level

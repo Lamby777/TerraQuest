@@ -1021,6 +1021,8 @@ TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
 TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
 TileIndexData(TileID, 12) = 0 'No Use
+TileIndexData(TileID, 5) = 1.11 'Light Spread Factor
+TileIndexData(TileID, 6) = 3 'Light Source Strength
 
 
 
@@ -1037,6 +1039,9 @@ TileIndexData(TileID, 2) = 0 'blocks shadow
 TileIndexData(TileID, 3) = 0 'has interior shadow
 TileIndexData(TileID, 4) = 500 'resistance
 TileIndexData(TileID, 5) = 0 'light spread factor 'is solid
+TileIndexData(TileID, 5) = 1.09 'Light Spread Factor
+TileIndexData(TileID, 6) = 5 'Light Source Strength
+
 
 'Red Flower  67
 TileID = 67

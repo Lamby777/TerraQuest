@@ -22,8 +22,8 @@ Title "TerraQuest"
 '$Include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240508A"
-Game.Version = "B1.3-240508A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240526A"
+Game.Version = "B1.3-240526A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -67,6 +67,12 @@ Dim Shared TextureScale As Unsigned Byte
 
 Dim Shared Dedication As String
 
+
+'Controller Shit - Put Assignment variables here
+Dim Shared ControllerID
+Dim Shared ControllerLDZ As Byte
+
+ControllerLDZ = 32
 
 
 'Network Fuckery Variables and Types
@@ -156,7 +162,7 @@ Do
     Limit 60
     Display
     Cls
-    If KeyHit <> 0 Then Exit Do
+    If KeyHit <> 0 Or InventorySelect Then Exit Do
 Loop Until 255 - (DedicateLimit - (60 * 5)) <= -32
 Color RGBA(255, 255, 255, 255)
 
@@ -2004,22 +2010,29 @@ Sub spreadlightd
 End Sub
 
 Sub GaussianLightSpread
-    'Static AuxLightArray()
-    'ReDim Preserve AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
-    Dim AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
+    'dim basic variables needed for this scope
     Dim ix, iy, iix, iiy
     Dim esx, esy 'efficiency limiters
     Dim FlickerFactor
 
+    'specifically redim this array so its in the heap rather than scope to fix a rather pesky bug locking up the game
+    '^ yeah no, this is not true at all, all arrays in qb64 are in the heap, this bug has been present since at least 1.2, reverting to dim
+    'Static AuxLightArray()
+    'ReDim Preserve AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
+    Dim AuxLightArray(Exp.MapSizeX, Exp.MapSizeY)
+
+    'clear previous lighting
     For ix = 0 To Exp.MapSizeX
         For iy = 0 To Exp.MapSizeY
             LocalLightLevel(ix, iy) = 0
+            '        AuxLightArray(ix, iy) = 0
         Next
     Next
 
     For ix = 0 To Exp.MapSizeX 'loop thorough all map tiles  (Source Tile)
         For iy = 0 To Exp.MapSizeY
             If TileData(ix, iy, 8) > 0 Then ' if tile is a light source
+                'in the name of optimization, limit the light spread loop to only the tiles that would be affected
                 esx = ix - TileData(ix, iy, 8)
                 esy = iy - TileData(ix, iy, 8)
                 If esx < 0 Then esx = 0
@@ -2027,10 +2040,12 @@ Sub GaussianLightSpread
                 If esy < 0 Then esy = 0
                 If esy > Exp.MapSizeY - (TileData(ix, iy, 8) * 2) Then esy = Exp.MapSizeY - (TileData(ix, iy, 8) * 2)
 
+                'if applicable, set a small offset for natural flicker
                 If TileData(ix, iy, 12) = 1 And Flag.NoFlicker = 0 Then FlickerFactor = (0.125 - (Rnd * 0.25))
 
                 For iix = esx To esx + (TileData(ix, iy, 8) * 2) 'test tile (spread tile)
                     For iiy = esy To esy + (TileData(ix, iy, 8) * 2)
+                        'mmmmm calculus
                         AuxLightArray(iix, iiy) = Round(SexyGaussian(TileData(ix, iy, 7), TileData(ix, iy, 8) + FlickerFactor, ix, iy, iix, iiy) + FlickerFactor)
                         If AuxLightArray(iix, iiy) > LocalLightLevel(iix, iiy) Then LocalLightLevel(iix, iiy) = AuxLightArray(iix, iiy)
                     Next
@@ -2046,7 +2061,7 @@ End Function
 
 Sub SpreadLight (updates)
     If Flag.NewLighting = 1 Then
-        '  GaussianLightSpread
+        GaussianLightSpread
         Exit Sub
     End If
     Dim As Integer i, ii
@@ -2242,7 +2257,7 @@ Sub TileInteract (TileX, TileY)
                         Case 65
                             SendChat Chr$(21) + "Pad is Ready, Step onto pad to teleport"
                             WallTile(TileCommand(0) + 1, TileCommand(1)) = 66
-
+                            UpdateTile TileCommand(0) + 1, TileCommand(1)
                         Case Else
                             SendChat Chr$(21) + "Pad could not be located"
                     End Select
@@ -2266,6 +2281,7 @@ End Sub
 Sub TeleportMapChange
     Dim i
     WallTile(TileCommand(0) + 1, TileCommand(1)) = 65
+    UpdateTile TileCommand(0) + 1, TileCommand(1)
     For i = 0 To 4
         TileCommand(i) = 0
     Next
@@ -4021,24 +4037,53 @@ End Function
 
 
 Function ToggleStrafe
-    If Flag.ChatOpen = 0 Then ToggleStrafe = KeyDown(100306)
+    If Flag.ChatOpen = 0 Then
+        If Strig(41, 1) = 0 Then ToggleStrafe = KeyDown(100306)
+        If KeyDown(100306) = 0 Then ToggleStrafe = Strig(41, 1)
+    End If
 End Function
+
+
+
 
 
 Function MoveUp
-    If Flag.ChatOpen = 0 Then MoveUp = KeyDown(119)
+    If Flag.ChatOpen = 0 Then
+        MoveUp = KeyDown(119)
+        If ControllerID > 0 Then
+            If Stick(1, 1) < 127 - ControllerLDZ Then MoveUp = -1
+        End If
+    End If
 End Function
 
 Function MoveDown
-    If Flag.ChatOpen = 0 Then MoveDown = KeyDown(115)
+    If Flag.ChatOpen = 0 Then
+        MoveDown = KeyDown(115)
+        If ControllerID > 0 Then
+            If Stick(1, 1) > 127 + ControllerLDZ Then MoveDown = -1
+        End If
+    End If
+
 End Function
 
 Function MoveLeft
-    If Flag.ChatOpen = 0 Then MoveLeft = KeyDown(97)
+    If Flag.ChatOpen = 0 Then
+        MoveLeft = KeyDown(97)
+        If ControllerID > 0 Then
+            If Stick(0, 1) < 127 - ControllerLDZ Then MoveLeft = -1
+        End If
+    End If
+
 End Function
 
 Function MoveRight
-    If Flag.ChatOpen = 0 Then MoveRight = KeyDown(100)
+    If Flag.ChatOpen = 0 Then
+        MoveRight = KeyDown(100)
+        If ControllerID > 0 Then
+            If Stick(0, 1) > 127 + ControllerLDZ Then MoveRight = -1
+        End If
+    End If
+
 End Function
 
 
@@ -4047,7 +4092,11 @@ Function InventoryUp
     If KeyDown(18432) And SingleHit <> 1 Then
         InventoryUp = KeyDown(18432)
         SingleHit = 1
-    ElseIf KeyDown(18432) = 0 Then SingleHit = 0
+    ElseIf KeyDown(18432) = 0 And SingleHit <> 2 Then SingleHit = 0
+    End If
+    If ControllerID > 0 And SingleHit <> 2 Then
+        If Stick(1, 4) < 127 - ControllerLDZ Then InventoryUp = -1: SingleHit = 2
+    ElseIf Abs(Stick(1, 4) - 127) < ControllerLDZ And SingleHit <> 1 Then SingleHit = 0
     End If
 
 
@@ -4059,8 +4108,14 @@ Function InventoryDown
     If KeyDown(20480) And SingleHit <> 1 Then
         InventoryDown = KeyDown(20480)
         SingleHit = 1
-    ElseIf KeyDown(20480) = 0 Then SingleHit = 0
+    ElseIf KeyDown(20480) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
+    If ControllerID > 0 And SingleHit <> 2 Then
+        If Stick(1, 4) > 127 + ControllerLDZ Then InventoryDown = -1: SingleHit = 2
+
+    ElseIf Abs(Stick(1, 4) - 127) < ControllerLDZ And SingleHit <> 1 Then SingleHit = 0
+    End If
+
 End Function
 
 Function InventoryLeft
@@ -4068,8 +4123,13 @@ Function InventoryLeft
     If KeyDown(19200) And SingleHit <> 1 Then
         InventoryLeft = KeyDown(19200)
         SingleHit = 1
-    ElseIf KeyDown(19200) = 0 Then SingleHit = 0
+    ElseIf KeyDown(19200) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
+    If ControllerID > 0 And SingleHit <> 2 Then
+        If Stick(0, 4) < 127 - ControllerLDZ Then InventoryLeft = -1: SingleHit = 2
+    ElseIf Abs(Stick(0, 4) - 127) < ControllerLDZ And SingleHit <> 1 Then SingleHit = 0
+    End If
+
 End Function
 
 Function InventoryRight
@@ -4077,10 +4137,69 @@ Function InventoryRight
     If KeyDown(19712) And SingleHit <> 1 Then
         InventoryRight = KeyDown(19712)
         SingleHit = 1
-    ElseIf KeyDown(19712) = 0 Then SingleHit = 0
+    ElseIf KeyDown(19712) = 0 And SingleHit <> 2 Then SingleHit = 0
+    End If
+    If ControllerID > 0 And SingleHit <> 2 Then
+        If Stick(0, 4) > 127 + ControllerLDZ Then InventoryRight = -1: SingleHit = 2
+    ElseIf Abs(Stick(0, 4) - 127) < ControllerLDZ And SingleHit <> 1 Then SingleHit = 0
     End If
 
 
+End Function
+
+Sub INTER
+    Select Case KeyPressed
+        Case 15616
+            Flag.DebugMode = Flag.DebugMode + 1
+        Case 15104
+            Flag.HudDisplay = Flag.HudDisplay + 1
+            'Redundant, Now controlled by InventoryOpen()
+            'Case 101
+            '   Flag.InventoryOpen = Flag.InventoryOpen + 1
+
+            '  Case 27
+            '     PauseMenu
+
+            ' keydown
+    End Select
+    If PauseGame Then PauseMenu
+    If InventoryOpen Then Flag.InventoryOpen = Flag.InventoryOpen + 1
+    'Updated inventory function to
+End Sub
+
+Function PauseGame
+    Static SingleHit As Byte
+    If KeyDown(27) And SingleHit <> 1 Then
+        PauseGame = KeyDown(27)
+        SingleHit = 1
+    ElseIf KeyDown(27) = 0 And SingleHit <> 2 Then SingleHit = 0
+    End If
+
+    If ControllerID > 0 Then
+        If Strig(29, 1) And SingleHit <> 2 Then
+            PauseGame = Strig(29, 1)
+            SingleHit = 2
+        ElseIf Strig(28, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
+End Function
+
+
+Function InventoryOpen
+    Static SingleHit As Byte
+    If KeyDown(101) And SingleHit <> 1 Then
+        InventoryOpen = KeyDown(101)
+        SingleHit = 1
+    ElseIf KeyDown(101) = 0 And SingleHit <> 2 Then SingleHit = 0
+    End If
+
+    If ControllerID > 0 Then
+        If Strig(13, 1) And SingleHit <> 2 Then
+            InventoryOpen = Strig(13, 1)
+            SingleHit = 2
+        ElseIf Strig(13, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
 End Function
 
 Function InventoryTab
@@ -4088,8 +4207,17 @@ Function InventoryTab
     If KeyDown(9) And SingleHit <> 1 Then
         InventoryTab = KeyDown(9)
         SingleHit = 1
-    ElseIf KeyDown(9) = 0 Then SingleHit = 0
+    ElseIf KeyDown(9) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
+
+    If ControllerID > 0 Then
+        If Strig(21, 1) And SingleHit <> 2 Then
+            InventoryTab = Strig(21, 1)
+            SingleHit = 2
+        ElseIf Strig(21, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
+
 End Function
 
 Function InventoryShiftTab
@@ -4097,8 +4225,17 @@ Function InventoryShiftTab
     If KeyDown(100304) And SingleHit <> 1 Then
         InventoryShiftTab = KeyDown(100304)
         SingleHit = 1
-    Else If KeyDown(100304) = 0 Then SingleHit = 0
+    Else If KeyDown(100304) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
+
+    If ControllerID > 0 Then
+        If Strig(17, 1) And SingleHit <> 2 Then
+            InventoryShiftTab = Strig(17, 1)
+            SingleHit = 2
+        ElseIf Strig(17, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
+
 End Function
 
 Function InventoryPageRight
@@ -4143,7 +4280,7 @@ Function InventorySelect
     If KeyDown(13) And SingleHit <> 1 Then
         InventorySelect = KeyDown(13)
         SingleHit = 1
-    ElseIf KeyDown(13) = 0 Then SingleHit = 0
+    ElseIf KeyDown(13) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
 
     If MouseButton(1) And SingleMouseHit <> 1 Then
@@ -4151,6 +4288,15 @@ Function InventorySelect
         SingleMouseHit = 1
     ElseIf MouseButton(1) = 0 Then SingleMouseHit = 0
     End If
+
+    If ControllerID > 0 Then
+        If Strig(1, 1) And SingleHit <> 2 Then
+            InventorySelect = Strig(1, 1)
+            SingleHit = 2
+        ElseIf Strig(1, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
+
 End Function
 
 Function InventorySplit
@@ -4159,7 +4305,7 @@ Function InventorySplit
     If KeyDown(92) And SingleHit <> 1 Then
         InventorySplit = KeyDown(92)
         SingleHit = 1
-    ElseIf KeyDown(92) = 0 Then SingleHit = 0
+    ElseIf KeyDown(92) = 0 And SingleHit <> 2 Then SingleHit = 0
     End If
 
     If MouseButton(2) And SingleMouseHit <> 1 Then
@@ -4168,16 +4314,28 @@ Function InventorySplit
     ElseIf MouseButton(2) = 0 Then SingleMouseHit = 0
     End If
 
+
+    If ControllerID > 0 Then
+        If Strig(9, 1) And SingleHit <> 2 Then
+            InventorySplit = Strig(9, 1)
+            SingleHit = 2
+        ElseIf Strig(9, 1) = 0 And SingleHit <> 1 Then SingleHit = 0
+        End If
+    End If
+
+
+
 End Function
 
 Function InventoryUse
-    If KeyDown(32) Or MouseButton(3) Then InventoryUse = -1
+    If KeyDown(32) Or MouseButton(3) Or Stick(1, 3) > 127 Then InventoryUse = -1
     'InventoryUse = KeyDown(32)
 End Function
 
-Function InventoryDrop
+Function InventoryDrop 'do not do this, fix this to be proper like the rest when inventory drop gets implimented
     InventoryDrop = KeyDown(113)
-End Function
+    InventoryDrop = Strig(5, 1)
+End Function 'also, DO THE FUCKING INVENTORY DROP SHIT
 
 
 
@@ -5237,22 +5395,6 @@ Sub Alert (img, message As String)
     If timeout < 60 Then Alert img, message Else timeout = 0
 End Sub
 
-
-Sub INTER
-    Select Case KeyPressed
-        Case 15616
-            Flag.DebugMode = Flag.DebugMode + 1
-        Case 15104
-            Flag.HudDisplay = Flag.HudDisplay + 1
-        Case 101
-            Flag.InventoryOpen = Flag.InventoryOpen + 1
-
-        Case 27
-            PauseMenu
-
-            ' keydown
-    End Select
-End Sub
 
 
 Sub Crafting
@@ -7141,23 +7283,25 @@ Sub SetLighting
     Dim TotalLightLevel
     For i = 0 To Exp.MapSizeY + 1
         For ii = 0 To Exp.MapSizeX + 1
+            If VisibleCheck(ii, i) = 1 Then
 
-            If GlobalLightLevel < LocalLightLevel(ii, i) Then
-                TotalLightLevel = LocalLightLevel(ii, i)
-            Else
-                TotalLightLevel = GlobalLightLevel
+                If GlobalLightLevel < LocalLightLevel(ii, i) Then
+                    TotalLightLevel = LocalLightLevel(ii, i)
+                Else
+                    TotalLightLevel = GlobalLightLevel
+                End If
+                'If PrecipitationLevel = 2 Then TotalLightLevel = TotalLightLevel - 2
+
+
+                'map change overlay mainly
+                TotalLightLevel = TotalLightLevel - OverlayLightLevel
+
+
+                If TotalLightLevel > 12 Then TotalLightLevel = 12
+                If TotalLightLevel < 1 Then TotalLightLevel = 1
+
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
             End If
-            'If PrecipitationLevel = 2 Then TotalLightLevel = TotalLightLevel - 2
-
-
-            'map change overlay mainly
-            TotalLightLevel = TotalLightLevel - OverlayLightLevel
-
-
-            If TotalLightLevel > 12 Then TotalLightLevel = 12
-            If TotalLightLevel < 1 Then TotalLightLevel = 1
-
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
     Next
 End Sub
@@ -7242,6 +7386,13 @@ Sub INITIALIZE
             Next
         Next
     Next
+
+    For i = 1 To Devices
+        If InStr(Device$(i), "[CONTROLLER]") > 0 Then
+            ControllerID = i
+        End If
+    Next
+
 
 
     If new = 1 Then SAVESETTINGS

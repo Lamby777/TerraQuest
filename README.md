@@ -9,12 +9,15 @@
 # How to download and play
 
 - TQ-Launcher (New)
+
 Download tqlauncher from https://github.com/Lamby777/tq-launcher or from your distribution repos (Comming soon)
 
 - Github Releases (Recommended)
+
 On the right sidebar, click the release file for the version you wish to download and extract, then execute the version for your operating system (ensure the Assets/ directory is next to the executable)
 
 - Github Source (Latest) (Compile Yourself (unless on linux))
+
 In the top right click code and click download as zip. If you are on linux then there is a build included. If not, or you need a [Stale] edge build, you will need version 3.13 or newer of QB64-PE to compile the .bas file (https://github.com/QB64-Phoenix-Edition/QB64pe)
 
 # Controls

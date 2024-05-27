@@ -7,6 +7,7 @@
 - https://discord.gg/xUqAjgRRcS
 
 # How to download and play
+There are several methods you can use to download and play TerraQuest, These are 3 official methods.
 
 - TQ-Launcher (New)
 

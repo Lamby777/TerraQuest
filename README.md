@@ -53,10 +53,26 @@ A full list of controls can be found in game in the settings menu. They are list
 - Strafe: LCtrl/RS
 
 - Open Chat/Commands: T
+ 
+- Toggle HUD: F1
 
 - Screenshot: F2
 
-- Toggle HUD: F1
-
 - Toggle Debug Display: F3
+
+# Troubleshooting
+
+If you are having trouble starting the game there are a few command line options you can try
+
+- ``windowed`` forces the game to start in windowed mode with a resolution of 800x600, useful if it fails to grab the native resolution properly
+
+- ``software`` forces the game to start in software rendering mode, much slower but can help troubleshoot gpu related issues
+
+- ``debug`` starts the game with several debugging flags turned on, useful to catch early triggering bugs
+
+There are also several in-game world commands you can run, press T to bring up chat, and type /help to get started.
+
+- (Legacy commands can be enabled with /legcom and are a backup command interpreter incase a command fails to work with world commands, can only be used in F3)
+
+
 
